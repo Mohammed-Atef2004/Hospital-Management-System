@@ -1,4 +1,7 @@
 
+using DAL.Database;
+using Microsoft.EntityFrameworkCore;
+
 namespace PL
 {
     public class Program
@@ -15,6 +18,10 @@ namespace PL
             builder.Services.AddSwaggerGen();
 
             var app = builder.Build();
+
+            //// DbContext
+            //builder.Services.AddDbContext<ApplicationDbContext>(options =>
+            //    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
             // Configure the HTTP request pipeline.
             if (app.Environment.IsDevelopment())

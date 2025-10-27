@@ -17,5 +17,6 @@ namespace DAL.Models
         public virtual ICollection<Appointment> Appointments { get; set; }
         public int DepartmentId { get; set; }
         public Department Department { get; set; }
+        public virtual ICollection<Schedule> Schedules { get; set; }                        
     }
 }

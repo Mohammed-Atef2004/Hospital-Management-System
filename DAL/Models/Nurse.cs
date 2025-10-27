@@ -12,7 +12,8 @@ namespace DAL.Models
         public int Id { get; set; }
         public  string ApplicationUserId { get; set; }
         public  ApplicationUser ApplicationUser { get; set; }
-
+        public int DepartmentId { get; set; }
+        public  Department Department { get; set; }
         public virtual ICollection<Patient>? Patients { get; set; }
     }
 }
