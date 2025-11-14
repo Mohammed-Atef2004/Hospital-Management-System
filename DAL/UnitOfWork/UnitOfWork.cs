@@ -14,10 +14,12 @@ namespace DAL.UnitOfWork
     {
         private readonly ApplicationDbContext _context;
         public IPatientRepository Patient { get; private set; }
+        public IDepartmentRepository Department { get; private set; }
         public UnitOfWork(ApplicationDbContext context)
         {
             _context = context;
             Patient = new PatientRepository(_context);
+            Department = new DepartmentRepository(_context);
 
         }
 

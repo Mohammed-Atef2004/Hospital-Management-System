@@ -55,8 +55,10 @@ namespace PL
             //repositoris and unit of work
             builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
             builder.Services.AddScoped<IPatientRepository, PatientRepository>();
+            builder.Services.AddScoped<IDepartmentRepository, DepartmentRepository>();
             //services
             builder.Services.AddScoped<IPatientService, PatientService>();
+            builder.Services.AddScoped<IDepartmentService, DepartmentService>();
             var app = builder.Build();
 
            

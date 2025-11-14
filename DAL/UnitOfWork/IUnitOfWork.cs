@@ -10,6 +10,8 @@ namespace DAL.UnitOfWork
     public interface IUnitOfWork : IDisposable
     {
         IPatientRepository Patient { get; }
+        IDepartmentRepository Department { get; }
+
         int Complete();
     }
 }
