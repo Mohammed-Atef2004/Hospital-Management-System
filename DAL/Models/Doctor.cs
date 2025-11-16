@@ -10,6 +10,7 @@ namespace DAL.Models
     public class Doctor:CommonData
     {
         public int Id { get; set; }
+        public string Name { get; set; }
         public string Specialization { get; set; }
 
         public required string ApplicationUserId { get; set; }

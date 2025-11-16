@@ -1,4 +1,5 @@
 ﻿using DAL.Repositories.Abstraction;
+using DAL.Repositories.Implementation;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -11,7 +12,7 @@ namespace DAL.UnitOfWork
     {
         IPatientRepository Patient { get; }
         IDepartmentRepository Department { get; }
-
-        int Complete();
+		IDoctorRepository Doctor { get; }
+		int Complete();
     }
 }

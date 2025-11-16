@@ -56,9 +56,12 @@ namespace PL
             builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
             builder.Services.AddScoped<IPatientRepository, PatientRepository>();
             builder.Services.AddScoped<IDepartmentRepository, DepartmentRepository>();
+            builder.Services.AddScoped<IDoctorRepository, DoctorRepository>();
             //services
             builder.Services.AddScoped<IPatientService, PatientService>();
             builder.Services.AddScoped<IDepartmentService, DepartmentService>();
+            builder.Services.AddScoped<IDoctorService, DoctorService>();
+
             var app = builder.Build();
 
            
