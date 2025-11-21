@@ -1,5 +1,6 @@
 ﻿using DAL.Models;
 using DAL.Models.Core;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Identity.Client;
 using System;
@@ -10,7 +11,7 @@ using System.Threading.Tasks;
 
 namespace DAL.Database
 {
-    public class ApplicationDbContext:DbContext
+    public class ApplicationDbContext:IdentityDbContext<ApplicationUser>
     {
         public DbSet<ApplicationUser> ApplicationUsers { get; set; }
         public DbSet<Appointment> Appointments { get; set; }

@@ -1,4 +1,5 @@
-﻿using BLL.Services.Abstraction;
+﻿using BLL.DTOs;
+using BLL.Services.Abstraction;
 using DAL.Models;
 using Microsoft.AspNetCore.Mvc;
 
@@ -36,7 +37,7 @@ namespace PL.Controllers
 
         // POST api/Patient
         [HttpPost]
-        public async Task<IActionResult> AddPatient([FromBody] Patient patient)
+        public async Task<IActionResult> AddPatient([FromBody] CreatePatientDTO patient)
         {
             var (_, msg) = await _patientService.AddPatientAsync(patient);
             return Ok(msg);
@@ -44,9 +45,9 @@ namespace PL.Controllers
 
         // PUT api/Patient
         [HttpPut]
-        public async Task<IActionResult> UpdatePatient([FromBody] Patient patient)
+        public async Task<IActionResult> UpdatePatient([FromBody] CreatePatientDTO patient,int Id)
         {
-            var (_, msg) = await _patientService.UpdatePatientAsync(patient);
+            var (_, msg) = await _patientService.UpdatePatientAsync(patient,Id);
             return Ok(msg);
         }
 

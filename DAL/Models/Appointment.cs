@@ -14,10 +14,11 @@ namespace DAL.Models
         public bool IsCancelled { get; set; } = false;
 
         public string Description { get; set; }
-        public required int PatientId { get; set; }
-        public Patient Patient { get; set; }
-        public  int DoctorId { get; set; }
-        public Doctor Doctor { get; set; }
+        public required int? PatientId { get; set; }
+        public Patient? Patient { get; set; }
+        public  int? DoctorId { get; set; }
+        public Doctor? Doctor { get; set; }
+    
 
     }
 }

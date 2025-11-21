@@ -1,11 +1,13 @@
-
+using BLL.Mappings;
 using BLL.Services.Abstraction;
 using BLL.Services.Implementation;
 using DAL.Database;
+using DAL.Models;
 using DAL.Repositories.Abstraction;
 using DAL.Repositories.Implementation;
 using DAL.UnitOfWork;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
@@ -61,6 +63,16 @@ namespace PL
             builder.Services.AddScoped<IPatientService, PatientService>();
             builder.Services.AddScoped<IDepartmentService, DepartmentService>();
             builder.Services.AddScoped<IDoctorService, DoctorService>();
+            builder.Services.AddIdentity<ApplicationUser,IdentityRole>()
+                .AddEntityFrameworkStores<ApplicationDbContext>();
+
+            builder.Services.AddAuthentication(options => {
+                options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+                options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+                options.DefaultScheme = JwtBearerDefaults.AuthenticationScheme;
+            });
+
+            builder.Services.AddAutoMapper(typeof(DomainProfile)); // Use this overload to avoid ambiguity
 
             var app = builder.Build();
 

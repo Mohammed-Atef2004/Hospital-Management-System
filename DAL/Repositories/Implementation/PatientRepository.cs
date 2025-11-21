@@ -28,6 +28,10 @@ namespace DAL.Repositories.Implementation
                 existingPatient.ApplicationUser=patient.ApplicationUser;
                 existingPatient.Appointments= patient.Appointments;
                 existingPatient.ApplicationUserId = patient.ApplicationUserId;
+                existingPatient.MedicalRecords = patient.MedicalRecords;
+                existingPatient.Prescriptions = patient.Prescriptions;
+                existingPatient.FirstName = patient.FirstName;
+                existingPatient.LastName = patient.LastName;
                 _dbSet.Update(existingPatient);
                 _context.SaveChanges();
 

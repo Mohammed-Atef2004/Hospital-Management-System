@@ -30,7 +30,8 @@ namespace DAL.Repositories.Implementation
                 existingDoctor.DepartmentId = doctor.DepartmentId;
                 existingDoctor.Appointments = doctor.Appointments;
                 existingDoctor.Schedules = doctor.Schedules;
-                existingDoctor.Name = doctor.Name;
+                existingDoctor.FirstName = doctor.FirstName;
+                existingDoctor.LastName = doctor.LastName;
                 _dbSet.Update(existingDoctor);
                 _context.SaveChanges();
 
