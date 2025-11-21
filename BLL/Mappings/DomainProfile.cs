@@ -15,6 +15,8 @@ namespace BLL.Mappings
        {
             CreateMap<PatientDTO, Patient>().ReverseMap();
             CreateMap<CreatePatientDTO, Patient>().ReverseMap();
-       }
+            CreateMap<DoctorDTO, Doctor>().ReverseMap();
+            CreateMap<CreateDoctorDTO, Doctor>().ReverseMap();
+        }
     }
 }
