@@ -1,18 +1,15 @@
-using BLL.Mappings;
-using BLL.Services.Abstraction;
-using BLL.Services.Implementation;
-using DAL.Database;
-using DAL.Models;
-using DAL.Repositories.Abstraction;
-using DAL.Repositories.Implementation;
-using DAL.UnitOfWork;
+
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
 
-namespace PL
+using Infastructure.Repositories;
+using Domain.Entities;
+using Infastructure.Presistence.Database;
+using Domain.Repositories;
+namespace Presentation
 {
     public class Program
     {
@@ -26,29 +23,29 @@ namespace PL
             // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
             builder.Services.AddEndpointsApiExplorer();
             builder.Services.AddSwaggerGen();
-            var jWTOptions=builder.Configuration.GetSection("JWT").Get<JWTOptions>();
-            builder.Services.AddSingleton(jWTOptions);
+            //var jWTOptions=builder.Configuration.GetSection("JWT").Get<JWTOptions>();
+            //builder.Services.AddSingleton(jWTOptions);
 
-            builder.Services.AddAuthentication()
-                .AddJwtBearer(JwtBearerDefaults.AuthenticationScheme, options =>
-                {
-                    options.SaveToken = true;
-                    options.TokenValidationParameters = new TokenValidationParameters
-                    {
-                        ValidateIssuer = true,
-                        ValidateAudience = true,
-                        ValidateLifetime = true,
-                        ValidateIssuerSigningKey = true,
+            //builder.Services.AddAuthentication()
+            //    .AddJwtBearer(JwtBearerDefaults.AuthenticationScheme, options =>
+            //    {
+            //        options.SaveToken = true;
+            //        options.TokenValidationParameters = new TokenValidationParameters
+            //        {
+            //            ValidateIssuer = true,
+            //            ValidateAudience = true,
+            //            ValidateLifetime = true,
+            //            ValidateIssuerSigningKey = true,
 
-                        ValidIssuer = jWTOptions.Issuer,
-                        ValidAudience = jWTOptions.Audience,
+            //            ValidIssuer = jWTOptions.Issuer,
+            //            ValidAudience = jWTOptions.Audience,
 
-                        IssuerSigningKey = new SymmetricSecurityKey(
-                            Encoding.UTF8.GetBytes(jWTOptions.SigningKey)
-                        )
-                    };
+            //            IssuerSigningKey = new SymmetricSecurityKey(
+            //                Encoding.UTF8.GetBytes(jWTOptions.SigningKey)
+            //            )
+            //        };
 
-                });
+            //    });
             // DbContext
             builder.Services.AddDbContext<ApplicationDbContext>(options =>
      options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
@@ -59,12 +56,9 @@ namespace PL
             builder.Services.AddScoped<IPatientRepository, PatientRepository>();
             builder.Services.AddScoped<IDepartmentRepository, DepartmentRepository>();
             builder.Services.AddScoped<IDoctorRepository, DoctorRepository>();
-            //services
-            builder.Services.AddScoped<IPatientService, PatientService>();
-            builder.Services.AddScoped<IDepartmentService, DepartmentService>();
-            builder.Services.AddScoped<IDoctorService, DoctorService>();
-            builder.Services.AddIdentity<ApplicationUser,IdentityRole>()
-                .AddEntityFrameworkStores<ApplicationDbContext>();
+            
+            //builder.Services.AddIdentity<ApplicationUser,IdentityRole>()
+            //    .AddEntityFrameworkStores<ApplicationDbContext>();
 
             builder.Services.AddAuthentication(options => {
                 options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
@@ -72,7 +66,7 @@ namespace PL
                 options.DefaultScheme = JwtBearerDefaults.AuthenticationScheme;
             });
 
-            builder.Services.AddAutoMapper(typeof(DomainProfile)); // Use this overload to avoid ambiguity
+            //builder.Services.AddAutoMapper(typeof(DomainProfile)); // Use this overload to avoid ambiguity
 
             var app = builder.Build();
 
