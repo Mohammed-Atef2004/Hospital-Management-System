@@ -1,55 +1,57 @@
-﻿using Domain.Entities;
+﻿using Domain.Exceptions.Department;
 
-public class Department : CommonData
+namespace Domain.Entities
 {
-    public int Id { get; private set; }
-    public string Name { get; private set; } = null!;
-    public string Description { get; private set; } = null!;
-    public bool IsActive { get; private set; }
-    public List<Doctor> Doctors { get; private set; } = new();
-    public List<Nurse> Nurses { get; private set; } = new();
-
-    private Department() { } // EF
-
-    private Department(string name, string description)
+    public class Department : CommonData
     {
-        Name = name;
-        Description = description;
-        IsActive = true;
-    }
+        public int Id { get; private set; }
+        public string Name { get; private set; } = default!;
+        public string Description { get; private set; } = default!;
+        public bool IsActive { get; private set; } = true;
 
-    public static Department Register(string name, string description)
-    {
-        if (string.IsNullOrWhiteSpace(name))
-            throw new Exception("Department name is required");
+        public virtual ICollection<Doctor>? Doctors { get; private set; }
+        public virtual ICollection<Nurse>? Nurses { get; private set; }
 
-        return new Department(name.Trim(), description?.Trim());
-    }
+        private Department() { } // EF Core
 
-    public void Rename(string name)
-    {
-        if (string.IsNullOrWhiteSpace(name))
-            throw new Exception("Invalid name");
+        // Factory Method (Task-Based API friendly)
+        public static Department Register(string name, string description)
+        {
+            if (string.IsNullOrWhiteSpace(name))
+                throw new DepartmentInvalidNameException();
 
-        Name = name.Trim();
-        UpdatedAt = DateTime.UtcNow;
-    }
+            return new Department
+            {
+                Name = name.Trim(),
+                Description = description?.Trim() ?? string.Empty
+            };
+        }
 
-    public void ChangeDescription(string description)
-    {
-        Description = description?.Trim();
-        UpdatedAt = DateTime.UtcNow;
-    }
+        public void UpdateInfo(string name, string description)
+        {
+            if (string.IsNullOrWhiteSpace(name))
+                throw new DepartmentInvalidNameException();
 
-    public void Activate()
-    {
-        IsActive = true;
-        UpdatedAt = DateTime.UtcNow;
-    }
+            Name = name.Trim();
+            Description = description?.Trim() ?? string.Empty;
+            UpdatedAt = DateTime.UtcNow;
+        }
 
-    public void Deactivate()
-    {
-        IsActive = false;
-        UpdatedAt = DateTime.UtcNow;
+        public void Deactivate()
+        {
+            if (!IsActive)
+                throw new DepartmentAlreadyInactiveException(Id);
+
+            IsActive = false;
+            UpdatedAt = DateTime.UtcNow;
+        }
+
+        public void Activate()
+        {
+            if(IsActive)
+                throw new DepartmentAlreadyActiveException(Id);
+            IsActive = true;
+            UpdatedAt = DateTime.UtcNow;
+        }
     }
 }

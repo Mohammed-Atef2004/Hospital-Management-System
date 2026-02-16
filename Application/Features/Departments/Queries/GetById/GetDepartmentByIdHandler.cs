@@ -1,4 +1,6 @@
-﻿using Application.Features.Departments.DTOs;
+﻿using Application.Common.Exceptions;
+using Application.Features.Departments.DTOs;
+using AutoMapper;
 using Domain.Repositories;
 using MediatR;
 using System;
@@ -13,6 +15,7 @@ namespace Application.Features.Departments.Queries.GetById
     : IRequestHandler<GetDepartmentByIdQuery, DepartmentDto>
     {
         private readonly IUnitOfWork _unitOfWork;
+        private readonly IMapper _mapper;
 
         public GetDepartmentByIdHandler(IUnitOfWork unitOfWork)
         {
@@ -21,11 +24,12 @@ namespace Application.Features.Departments.Queries.GetById
 
         public async Task<DepartmentDto> Handle(GetDepartmentByIdQuery request, CancellationToken ct)
         {
-            var d = await _unitOfWork.Department.GetByIdAsync(request.Id);
-            if (d == null) return null;
+            var dept = await _unitOfWork.Department.GetByIdAsync(request.Id)
+                ?? throw new NotFoundException("Department", request.Id);
 
-            return new DepartmentDto(d.Id, d.Name, d.Description, d.IsActive);
+            return _mapper.Map<DepartmentDto>(dept);
         }
+
     }
 
 }

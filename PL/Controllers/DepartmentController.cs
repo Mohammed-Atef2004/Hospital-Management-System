@@ -26,12 +26,18 @@ namespace API.Controllers
             => Ok(await _mediator.Send(cmd));
 
         [HttpPut("{id}/rename")]
-        public async Task<IActionResult> Rename(int id, RenameDepartmentCommand cmd)
-            => Ok(await _mediator.Send(cmd with { Id = id }));
+        public async Task<IActionResult> Rename(int id, [FromBody] string name)
+        {
+            RenameDepartmentCommand cmd = new(id, name);
+            return Ok(await _mediator.Send(cmd));
+        }
 
         [HttpPut("{id}/change-description")]
-        public async Task<IActionResult> ChangeDescription(int id, ChangeDepartmentDescriptionCommand cmd)
-            => Ok(await _mediator.Send(cmd with { Id = id }));
+        public async Task<IActionResult> ChangeDescription(int id,[FromBody] string discription)
+        {
+            ChangeDepartmentDescriptionCommand cmd = new(id, discription);
+            return Ok(await _mediator.Send(cmd));
+        }
 
         [HttpPut("{id}/activate")]
         public async Task<IActionResult> Activate(int id)

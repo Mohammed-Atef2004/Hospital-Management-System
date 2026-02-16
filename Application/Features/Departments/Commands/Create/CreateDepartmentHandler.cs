@@ -1,11 +1,13 @@
-﻿using MediatR;
+﻿using Application.Common.Exceptions;
+using Domain.Entities;
+using Domain.Exceptions.Department;
+using Domain.Repositories;
+using MediatR;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using Domain.Repositories;
-using Domain.Entities;
 
 namespace Application.Features.Departments.Commands.Create
 {
@@ -21,7 +23,7 @@ namespace Application.Features.Departments.Commands.Create
         public async Task<int> Handle(CreateDepartmentCommand request, CancellationToken ct)
         {
             if (await _unitOfWork.Department.ExistsByNameAsync(request.Name))
-                throw new Exception("Department already exists");
+                throw new ConflictException($"Department '{request.Name}' already exists.");
 
             var dept = Department.Register(request.Name, request.Description);
 
@@ -30,6 +32,8 @@ namespace Application.Features.Departments.Commands.Create
 
             return dept.Id;
         }
+
+
     }
 
 

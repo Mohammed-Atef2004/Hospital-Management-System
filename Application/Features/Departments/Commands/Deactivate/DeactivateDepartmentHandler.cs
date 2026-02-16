@@ -1,4 +1,5 @@
-﻿using Domain.Repositories;
+﻿using Application.Common.Exceptions;
+using Domain.Repositories;
 using MediatR;
 using System;
 using System.Collections.Generic;
@@ -17,15 +18,18 @@ namespace Application.Features.Departments.Commands.Deactivate
             _unitOfWork = unitOfWork;
         }
 
-        public async Task<Unit> Handle(DeactivateDepartmentCommand request, CancellationToken ct)
+        public async Task <Unit>Handle(DeactivateDepartmentCommand request, CancellationToken ct)
         {
-            var dept = await _unitOfWork.Department.GetByIdAsync(request.Id);
-            if (dept == null) throw new Exception("Department not found");
+            var dept = await _unitOfWork.Department.GetByIdAsync(request.Id)
+                ?? throw new NotFoundException("Department", request.Id);
 
-            dept.Deactivate();
+            dept.Deactivate(); 
+
             await _unitOfWork.CompleteAsync();
             return Unit.Value;
         }
+
+        
     }
 
 }
