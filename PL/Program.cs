@@ -1,14 +1,14 @@
-
+using Application;
+using Domain.Repositories;
+using FluentValidation;
+using Infastructure.Presistence.Database;
+using Infastructure.Repositories;
+using MediatR;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
 
-using Infastructure.Repositories;
-using Domain.Entities;
-using Infastructure.Presistence.Database;
-using Domain.Repositories;
 namespace Presentation
 {
     public class Program
@@ -17,61 +17,61 @@ namespace Presentation
         {
             var builder = WebApplication.CreateBuilder(args);
 
-            // Add services to the container.
-
+            // ================== Controllers ==================
             builder.Services.AddControllers();
-            // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
+
+            // ================== Swagger ==================
             builder.Services.AddEndpointsApiExplorer();
             builder.Services.AddSwaggerGen();
-            //var jWTOptions=builder.Configuration.GetSection("JWT").Get<JWTOptions>();
-            //builder.Services.AddSingleton(jWTOptions);
 
-            //builder.Services.AddAuthentication()
-            //    .AddJwtBearer(JwtBearerDefaults.AuthenticationScheme, options =>
-            //    {
-            //        options.SaveToken = true;
-            //        options.TokenValidationParameters = new TokenValidationParameters
-            //        {
-            //            ValidateIssuer = true,
-            //            ValidateAudience = true,
-            //            ValidateLifetime = true,
-            //            ValidateIssuerSigningKey = true,
-
-            //            ValidIssuer = jWTOptions.Issuer,
-            //            ValidAudience = jWTOptions.Audience,
-
-            //            IssuerSigningKey = new SymmetricSecurityKey(
-            //                Encoding.UTF8.GetBytes(jWTOptions.SigningKey)
-            //            )
-            //        };
-
-            //    });
-            // DbContext
+            // ================== DbContext ==================
             builder.Services.AddDbContext<ApplicationDbContext>(options =>
-     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+                options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
-
-            //repositoris and unit of work
+            // ================== Repositories + UoW ==================
             builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
-            builder.Services.AddScoped<IPatientRepository, PatientRepository>();
             builder.Services.AddScoped<IDepartmentRepository, DepartmentRepository>();
             builder.Services.AddScoped<IDoctorRepository, DoctorRepository>();
-            
-            //builder.Services.AddIdentity<ApplicationUser,IdentityRole>()
-            //    .AddEntityFrameworkStores<ApplicationDbContext>();
+            builder.Services.AddScoped<IPatientRepository, PatientRepository>();
 
-            builder.Services.AddAuthentication(options => {
-                options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
-                options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
-                options.DefaultScheme = JwtBearerDefaults.AuthenticationScheme;
-            });
+            // ================== MediatR ==================
+            builder.Services.AddMediatR(typeof(ApplicationAssembly));
 
-            //builder.Services.AddAutoMapper(typeof(DomainProfile)); // Use this overload to avoid ambiguity
+
+            // ================== FluentValidation (Global) ==================
+            builder.Services.AddValidatorsFromAssembly(typeof(ApplicationAssembly).Assembly);
+            builder.Services.AddTransient(typeof(IPipelineBehavior<,>), typeof(ValidationBehavior<,>));
+            builder.Services.AddTransient(typeof(IPipelineBehavior<,>), typeof(TransactionBehavior<,>));
+
+            // ================== JWT Authentication ==================
+            //var jwtSection = builder.Configuration.GetSection("JWT");
+            //var signingKey = Encoding.UTF8.GetBytes(jwtSection["SigningKey"]);
+
+            //builder.Services.AddAuthentication(options =>
+            //{
+            //    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+            //    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+            //})
+            //.AddJwtBearer(options =>
+            //{
+            //    options.RequireHttpsMetadata = false;
+            //    options.SaveToken = true;
+            //    options.TokenValidationParameters = new TokenValidationParameters
+            //    {
+            //        ValidateIssuer = true,
+            //        ValidateAudience = true,
+            //        ValidateLifetime = true,
+            //        ValidateIssuerSigningKey = true,
+
+            //        ValidIssuer = jwtSection["Issuer"],
+            //        ValidAudience = jwtSection["Audience"],
+            //        IssuerSigningKey = new SymmetricSecurityKey(signingKey)
+            //    };
+            //});
 
             var app = builder.Build();
 
-           
-            // Configure the HTTP request pipeline.
+            // ================== Middleware ==================
             if (app.Environment.IsDevelopment())
             {
                 app.UseSwagger();
@@ -80,8 +80,8 @@ namespace Presentation
 
             app.UseHttpsRedirection();
 
+            app.UseAuthentication(); // IMPORTANT
             app.UseAuthorization();
-
 
             app.MapControllers();
 

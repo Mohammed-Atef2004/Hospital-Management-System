@@ -10,7 +10,7 @@ namespace Domain.Entities
     {
         public DateTime? CreatedAt { get; protected set; } = DateTime.UtcNow;
         public DateTime? UpdatedAt { get; protected set; } = DateTime.UtcNow;
-        public bool? IsDeleted { get; protected set; } = false;
+        public bool IsDeleted { get; protected set; } = false;
         public DateTime? DeletedAt { get; protected set; }
         public string? CreatedBy { get; set; }
         public string? UpdatedBy { get; set; }

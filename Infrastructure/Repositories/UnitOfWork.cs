@@ -24,7 +24,7 @@ namespace Infastructure.Repositories
 
 		}
 
-        public int Complete()
+        public async Task<int> CompleteAsync()
         {
             return _context.SaveChanges();
 

@@ -9,11 +9,18 @@ namespace Domain.Repositories
 {
     public interface IGenericRepository<T> where T : class
     {
-        IEnumerable<T> GetAll(Expression<Func<T, bool>>? predict = null, string? includeword = null);
-        T GetFirstOrDefault(Expression<Func<T, bool>>? predict = null, string? includeword = null);
-        bool Add(T entity);
-        bool Remove(T entity);
-        bool RemoveRange(IEnumerable<T> entities);
+        Task<T?> GetByIdAsync(object id);
+        Task<IEnumerable<T>> GetAllAsync(
+            Expression<Func<T, bool>>? filter = null,
+            Func<IQueryable<T>, IQueryable<T>>? include = null);
 
+        Task<T?> GetFirstOrDefaultAsync(
+            Expression<Func<T, bool>>? filter = null,
+            Func<IQueryable<T>, IQueryable<T>>? include = null);
+
+        Task AddAsync(T entity);
+        void Update(T entity);
+        void Remove(T entity);
     }
+
 }

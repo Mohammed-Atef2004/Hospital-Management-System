@@ -12,6 +12,6 @@ namespace Domain.Repositories
         IPatientRepository Patient { get; }
         IDepartmentRepository Department { get; }
 		IDoctorRepository Doctor { get; }
-		int Complete();
+		Task<int> CompleteAsync();
     }
 }

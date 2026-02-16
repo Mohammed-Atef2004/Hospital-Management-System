@@ -11,78 +11,59 @@ using System.Threading.Tasks;
 
 namespace Infastructure.Repositories
 {
+
     public class GenericRepository<T> : IGenericRepository<T> where T : class
     {
-        private readonly ApplicationDbContext _context;
-        private DbSet<T> _dbSet;
+        protected readonly ApplicationDbContext _context;
+        protected readonly DbSet<T> _dbSet;
+
         public GenericRepository(ApplicationDbContext context)
         {
             _context = context;
             _dbSet = _context.Set<T>();
         }
-        public bool Add(T entity)
-        {
-            _dbSet.Add(entity);
-            if (_context.SaveChanges() > 0)
-            {
-                return true;
-            }
-            return false;
-        }
 
-        public IEnumerable<T> GetAll(Expression<Func<T, bool>>? predict = null, string? includeword = null)
+        public async Task<T?> GetByIdAsync(object id)
+            => await _dbSet.FindAsync(id);
+
+        public async Task<IEnumerable<T>> GetAllAsync(
+            Expression<Func<T, bool>>? filter = null,
+            Func<IQueryable<T>, IQueryable<T>>? include = null)
         {
             IQueryable<T> query = _dbSet;
-            if (predict != null)
-            {
-                query = query.Where(predict);
-            }
-            if (includeword != null)
-            {
-                foreach (var item in includeword.Split(new char[] { ',' }, StringSplitOptions.RemoveEmptyEntries))
-                {
-                    query = query.Include(item);
-                }
-            }
-            return query.ToList();
+
+            if (filter != null)
+                query = query.Where(filter);
+
+            if (include != null)
+                query = include(query);
+
+            return await query.ToListAsync();
         }
 
-        public T GetFirstOrDefault(Expression<Func<T, bool>>? predict = null, string? includeword = null)
+        public async Task<T?> GetFirstOrDefaultAsync(
+            Expression<Func<T, bool>>? filter = null,
+            Func<IQueryable<T>, IQueryable<T>>? include = null)
         {
             IQueryable<T> query = _dbSet;
-            if (predict != null)
-            {
-                query = query.Where(predict);
-            }
-            if (includeword != null)
-            {
-                foreach (var item in includeword.Split(new char[] { ',' }, StringSplitOptions.RemoveEmptyEntries))
-                {
-                    query = query.Include(item);
-                }
-            }
-            return query.SingleOrDefault();
+
+            if (filter != null)
+                query = query.Where(filter);
+
+            if (include != null)
+                query = include(query);
+
+            return await query.FirstOrDefaultAsync();
         }
 
-        public bool Remove(T entity)
-        {
-            _dbSet.Remove(entity);
-            if (_context.SaveChanges() > 0)
-            {
-                return true;
-            }
-            return false;
-        }
+        public async Task AddAsync(T entity)
+            => await _dbSet.AddAsync(entity);
 
-        public bool RemoveRange(IEnumerable<T> entities)
-        {
-            _dbSet.RemoveRange(entities);
-            if (_context.SaveChanges() > 0)
-            {
-                return true;
-            }
-            return false;
-        }
+        public void Update(T entity)
+            => _dbSet.Update(entity);
 
+        public void Remove(T entity)
+            => _dbSet.Remove(entity);
     }
+
 }

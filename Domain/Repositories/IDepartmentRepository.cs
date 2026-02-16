@@ -9,6 +9,7 @@ namespace Domain.Repositories
 {
     public interface IDepartmentRepository : IGenericRepository<Department>
     {
-        public void Update(Department department);
+        Task<bool> ExistsByNameAsync(string name);
     }
+
 }
