@@ -17,10 +17,4 @@
     <ProjectReference Include="..\Infrastructure\Infrastructure.csproj" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Folder Include="Features\Doctors\DTOs\" />
-    <Folder Include="Features\Doctors\Mappings\" />
-    <Folder Include="Features\Doctors\Queries\" />
-  </ItemGroup>
-
 </Project>

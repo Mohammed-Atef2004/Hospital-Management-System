@@ -1,45 +1,49 @@
 ﻿using Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
-namespace Infastructure.Presistence.Configurations
+public class DoctorConfiguration : IEntityTypeConfiguration<Doctor>
 {
-    public class DoctorConfiguration:IEntityTypeConfiguration<Doctor>
+    public void Configure(EntityTypeBuilder<Doctor> builder)
     {
-        public void Configure(EntityTypeBuilder<Doctor> builder)
-        {
-            builder.ToTable("Doctors");
+        builder.ToTable("Doctors");
 
-            builder.HasKey(d => d.Id);
+        builder.HasKey(d => d.Id);
 
-            builder
-               .HasOne(d => d.ApplicationUser)
-               .WithOne(d => d.DoctorProfile)
-                .HasForeignKey<Doctor>(d => d.ApplicationUserId)
-                .OnDelete(DeleteBehavior.Restrict);
+        // ضبط خصائص النصوص
+        builder.Property(d => d.FirstName).IsRequired().HasMaxLength(50);
+        builder.Property(d => d.LastName).IsRequired().HasMaxLength(50);
+        builder.Property(d => d.Specialization).IsRequired().HasMaxLength(100);
+        builder.Property(d => d.PhoneNumber).HasMaxLength(20);
+        builder.Property(d => d.Address).HasMaxLength(250);
+        builder.Property(d => d.City).HasMaxLength(50);
 
-            builder
-                .HasMany(d => d.Appointments)
-                .WithOne(a => a.Doctor)
-                .HasForeignKey(a => a.DoctorId)
-                .OnDelete(DeleteBehavior.Restrict);
+        // علاقة 1:1 مع ApplicationUser
+        builder
+           .HasOne(d => d.ApplicationUser)
+           .WithOne(u => u.DoctorProfile) // تأكد أن الاسم في ApplicationUser هو DoctorProfile
+           .HasForeignKey<Doctor>(d => d.ApplicationUserId)
+           .OnDelete(DeleteBehavior.Restrict);
 
-            builder
-                .HasOne(d => d.Department)
-                .WithMany(dep => dep.Doctors)
-                .HasForeignKey(d => d.DepartmentId)
-                .OnDelete(DeleteBehavior.Restrict);
+        // علاقة 1:N مع المواعيد
+        builder
+            .HasMany(d => d.Appointments)
+            .WithOne(a => a.Doctor)
+            .HasForeignKey(a => a.DoctorId)
+            .OnDelete(DeleteBehavior.Restrict);
 
-            builder
-                .HasMany(d=>d.Schedules)
-                .WithOne(s=>s.Doctor)
-                .HasForeignKey(s=>s.DoctorId)
-                .OnDelete(DeleteBehavior.Restrict);
-        }
+        // علاقة N:1 مع الأقسام
+        builder
+            .HasOne(d => d.Department)
+            .WithMany(dep => dep.Doctors)
+            .HasForeignKey(d => d.DepartmentId)
+            .OnDelete(DeleteBehavior.SetNull); // ملاحظة: لو القسم اتمسح، الدكاترة يفضلوا موجودين بس بدون قسم
+
+        // علاقة 1:N مع جداول العمل
+        builder
+            .HasMany(d => d.Schedules)
+            .WithOne(s => s.Doctor)
+            .HasForeignKey(s => s.DoctorId)
+            .OnDelete(DeleteBehavior.Cascade); // لو اتمسح الدكتور، طبيعي جداوله تتمسح معاه
     }
 }

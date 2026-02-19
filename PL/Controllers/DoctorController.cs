@@ -8,6 +8,8 @@ using Microsoft.AspNetCore.Mvc;
 using Application.Features.Doctors.Commands.Register;
 using Application.Features.Doctors.Commands.UpdateSpecialization;
 using Application.Features.Doctors.Commands.RelocateDoctorOffice;
+using Application.Features.Doctors.Queries.GetAll;
+using Application.Features.Doctors.Queries.GetById;
 
 namespace WebApi.Controllers
 {
@@ -24,26 +26,20 @@ namespace WebApi.Controllers
 
         // --- Queries (Read Side) ---
 
-        //[HttpGet]
-        //public async Task<IActionResult> GetDoctors([FromQuery] GetDoctorsWithPaginationQuery query)
-        //{
-        //    var result = await _mediator.Send(query);
-        //    return Ok(result);
-        //}
+        [HttpGet]
+        public async Task<IActionResult> GetDoctors([FromQuery] GetAllDoctorsQuery query)
+        {
+            var result = await _mediator.Send(query);
+            return Ok(result);
+        }
 
-        //[HttpGet("{id}")]
-        //public async Task<IActionResult> GetProfile(int id)
-        //{
-        //    var result = await _mediator.Send(new GetDoctorProfileQuery(id));
-        //    return result != null ? Ok(result) : NotFound();
-        //}
+        [HttpGet("{id}")]
+        public async Task<IActionResult> GetDoctor(int id)
+        {
+            var result = await _mediator.Send(new GetDoctorByIdQuery(id));
+            return result != null ? Ok(result) : NotFound();
+        }
 
-        //[HttpGet("{id}/availability")]
-        //public async Task<IActionResult> GetAvailability(int id, [FromQuery] DateTime date)
-        //{
-        //    var result = await _mediator.Send(new GetDoctorAvailableSlotsQuery(id, date));
-        //    return Ok(result);
-        //}
 
         // --- Commands (Write Side - Tasks) ---
 
