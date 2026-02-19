@@ -14,28 +14,17 @@ namespace Infastructure.Repositories
     public class DoctorRepository : GenericRepository<Doctor>, IDoctorRepository
     {
         private readonly ApplicationDbContext _context;
-        private readonly DbSet<Doctor> _dbSet;
         public DoctorRepository(ApplicationDbContext context) : base(context)
         {
             _context = context;
-            _dbSet = _context.Set<Doctor>();
         }
-        public void Update(Doctor doctor)
-        {
-            var existingDoctor = _dbSet.Find(doctor.Id);
-            if (existingDoctor != null)
-            {
-                existingDoctor.ApplicationUserId = doctor.ApplicationUserId;
-                existingDoctor.Specialization = doctor.Specialization;
-                existingDoctor.DepartmentId = doctor.DepartmentId;
-                existingDoctor.Appointments = doctor.Appointments;
-                existingDoctor.Schedules = doctor.Schedules;
-                existingDoctor.FirstName = doctor.FirstName;
-                existingDoctor.LastName = doctor.LastName;
-                _dbSet.Update(existingDoctor);
-                _context.SaveChanges();
 
-            }
+        public async Task<Doctor?> GetDoctorWithSchedulesAndAppointmentsAsync(int id)
+        {
+            return await _context.Doctors
+                .Include(d => d.Schedules)
+                .Include(d => d.Appointments)
+                .FirstOrDefaultAsync(d => d.Id == id);
         }
     }
 }

@@ -1,4 +1,5 @@
-﻿using Domain.Repositories;
+﻿using Application.Common.Exceptions;
+using Domain.Repositories;
 using MediatR;
 using System;
 using System.Collections.Generic;
@@ -20,7 +21,7 @@ namespace Application.Features.Departments.Commands.RenameDepartment
         public async Task<Unit> Handle(RenameDepartmentCommand request, CancellationToken ct)
         {
             var dept = await _unitOfWork.Department.GetByIdAsync(request.Id);
-            if (dept == null) throw new Exception("Department not found");
+            if (dept == null) throw new NotFoundException("Department not found");
 
             dept.Rename(request.Name);
 
@@ -28,7 +29,7 @@ namespace Application.Features.Departments.Commands.RenameDepartment
             return Unit.Value;
         }
 
-      
+
     }
 
 }

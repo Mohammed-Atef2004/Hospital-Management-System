@@ -17,7 +17,7 @@ namespace Infastructure.Presistence.Configurations
             builder.HasKey(s => s.Id);
 
             builder
-                 .Property(s => s.Date)
+                 .Property(s => s.DayofWeek)
                  .IsRequired();
 
             builder.Property(s => s.StartTime)

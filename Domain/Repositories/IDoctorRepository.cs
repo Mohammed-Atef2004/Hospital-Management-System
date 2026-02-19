@@ -9,6 +9,9 @@ namespace Domain.Repositories
 {
     public interface IDoctorRepository : IGenericRepository<Doctor>
     {
-        public void Update(Doctor doctor);
+        public interface IDoctorRepository : IGenericRepository<Doctor>
+        {
+            Task<Doctor?> GetDoctorWithSchedulesAndAppointmentsAsync(int id);
+        }
     }
 }

@@ -21,7 +21,7 @@ namespace Application.Features.Departments.Commands.Deactivate
         public async Task <Unit>Handle(DeactivateDepartmentCommand request, CancellationToken ct)
         {
             var dept = await _unitOfWork.Department.GetByIdAsync(request.Id)
-                ?? throw new NotFoundException("Department", request.Id);
+                ?? throw new NotFoundException($"Department with {request.Id} is not found");
 
             dept.Deactivate(); 
 

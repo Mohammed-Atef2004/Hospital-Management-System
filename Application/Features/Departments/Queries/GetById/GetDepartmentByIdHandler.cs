@@ -25,7 +25,7 @@ namespace Application.Features.Departments.Queries.GetById
         public async Task<DepartmentDto> Handle(GetDepartmentByIdQuery request, CancellationToken ct)
         {
             var dept = await _unitOfWork.Department.GetByIdAsync(request.Id)
-                ?? throw new NotFoundException("Department", request.Id);
+                ?? throw new NotFoundException("Department is not found");
 
             return _mapper.Map<DepartmentDto>(dept);
         }

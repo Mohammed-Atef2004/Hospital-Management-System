@@ -9,10 +9,16 @@ namespace Domain.Entities
     public class Schedule
     {
         public int Id { get; set; }
-        public DateTime Date { get; set; }
+        public DayOfWeek DayofWeek { get; set; }
         public TimeSpan StartTime { get; set; }
         public TimeSpan EndTime { get; set; }
         public int? DoctorId { get; set; }
         public Doctor? Doctor { get; set; }
+        public void Update(DayOfWeek newDay, TimeSpan newStart, TimeSpan newEnd)
+        {
+            DayofWeek = newDay;
+            StartTime = newStart;
+            EndTime = newEnd;
+        }
     }
 }

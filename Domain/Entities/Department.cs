@@ -46,11 +46,26 @@ namespace Domain.Entities
             UpdatedAt = DateTime.UtcNow;
         }
 
+
         public void Activate()
         {
             if(IsActive)
                 throw new DepartmentAlreadyActiveException(Id);
             IsActive = true;
+            UpdatedAt = DateTime.UtcNow;
+        }
+        public void Rename(string newName)
+        {
+            if (string.IsNullOrWhiteSpace(newName))
+                throw new DepartmentInvalidNameException();
+            Name = newName.Trim();
+            UpdatedAt = DateTime.UtcNow;
+        }
+        public void ChangeDescription(string newDescription)
+        {
+            if (string.IsNullOrWhiteSpace(newDescription))
+                 throw new DepartmentInvalidDescriptionException();
+            Description = newDescription?.Trim() ?? string.Empty;
             UpdatedAt = DateTime.UtcNow;
         }
     }

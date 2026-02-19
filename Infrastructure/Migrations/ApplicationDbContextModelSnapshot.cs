@@ -22,53 +22,6 @@ namespace Infrastructure.Migrations
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
-            modelBuilder.Entity("Department", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<DateTime?>("CreatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("CreatedBy")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<DateTime?>("DeletedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("DeletedBy")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("Description")
-                        .IsRequired()
-                        .HasMaxLength(500)
-                        .HasColumnType("nvarchar(500)");
-
-                    b.Property<bool>("IsActive")
-                        .HasColumnType("bit");
-
-                    b.Property<bool>("IsDeleted")
-                        .HasColumnType("bit");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
-
-                    b.Property<DateTime?>("UpdatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("UpdatedBy")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("Departments", (string)null);
-                });
-
             modelBuilder.Entity("Domain.Entities.ApplicationUser", b =>
                 {
                     b.Property<string>("Id")
@@ -206,6 +159,53 @@ namespace Infrastructure.Migrations
                     b.HasIndex("PatientId");
 
                     b.ToTable("Appointments", (string)null);
+                });
+
+            modelBuilder.Entity("Domain.Entities.Department", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime?>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("CreatedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("DeletedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("UpdatedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Departments", (string)null);
                 });
 
             modelBuilder.Entity("Domain.Entities.Doctor", b =>
@@ -598,8 +598,8 @@ namespace Infrastructure.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<DateTime>("Date")
-                        .HasColumnType("datetime2");
+                    b.Property<int>("DayofWeek")
+                        .HasColumnType("int");
 
                     b.Property<int?>("DoctorId")
                         .HasColumnType("int");
@@ -774,7 +774,7 @@ namespace Infrastructure.Migrations
                         .HasForeignKey("Domain.Entities.Doctor", "ApplicationUserId")
                         .OnDelete(DeleteBehavior.Restrict);
 
-                    b.HasOne("Department", "Department")
+                    b.HasOne("Domain.Entities.Department", "Department")
                         .WithMany("Doctors")
                         .HasForeignKey("DepartmentId")
                         .OnDelete(DeleteBehavior.Restrict);
@@ -816,7 +816,7 @@ namespace Infrastructure.Migrations
                         .HasForeignKey("Domain.Entities.Nurse", "ApplicationUserId")
                         .OnDelete(DeleteBehavior.Restrict);
 
-                    b.HasOne("Department", "Department")
+                    b.HasOne("Domain.Entities.Department", "Department")
                         .WithMany("Nurses")
                         .HasForeignKey("DepartmentId")
                         .OnDelete(DeleteBehavior.Restrict);
@@ -931,13 +931,6 @@ namespace Infrastructure.Migrations
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("Department", b =>
-                {
-                    b.Navigation("Doctors");
-
-                    b.Navigation("Nurses");
-                });
-
             modelBuilder.Entity("Domain.Entities.ApplicationUser", b =>
                 {
                     b.Navigation("DoctorProfile");
@@ -945,6 +938,13 @@ namespace Infrastructure.Migrations
                     b.Navigation("NurseProfile");
 
                     b.Navigation("PatientProfile");
+                });
+
+            modelBuilder.Entity("Domain.Entities.Department", b =>
+                {
+                    b.Navigation("Doctors");
+
+                    b.Navigation("Nurses");
                 });
 
             modelBuilder.Entity("Domain.Entities.Doctor", b =>
