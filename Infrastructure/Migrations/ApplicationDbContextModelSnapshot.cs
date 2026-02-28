@@ -208,6 +208,38 @@ namespace Infrastructure.Migrations
                     b.ToTable("Departments", (string)null);
                 });
 
+            modelBuilder.Entity("Domain.Entities.Dispense", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("Date")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("MedicineId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("PatientId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("PharmacistId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("Quantity")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("MedicineId");
+
+                    b.HasIndex("PatientId");
+
+                    b.ToTable("Dispenses", (string)null);
+                });
+
             modelBuilder.Entity("Domain.Entities.Doctor", b =>
                 {
                     b.Property<int>("Id")
@@ -623,6 +655,38 @@ namespace Infrastructure.Migrations
                     b.ToTable("Schedules", (string)null);
                 });
 
+            modelBuilder.Entity("Domain.Entities.StockAdjustment", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("Date")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("MedicineId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("PharmacistId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("Quantity")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Reason")
+                        .IsRequired()
+                        .HasMaxLength(250)
+                        .HasColumnType("nvarchar(250)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("MedicineId");
+
+                    b.ToTable("StockAdjustments", (string)null);
+                });
+
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRole", b =>
                 {
                     b.Property<string>("Id")
@@ -773,6 +837,25 @@ namespace Infrastructure.Migrations
                     b.Navigation("Patient");
                 });
 
+            modelBuilder.Entity("Domain.Entities.Dispense", b =>
+                {
+                    b.HasOne("Domain.Entities.Medicine", "Medicine")
+                        .WithMany("Dispenses")
+                        .HasForeignKey("MedicineId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Domain.Entities.Patient", "Patient")
+                        .WithMany("Dispenses")
+                        .HasForeignKey("PatientId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Medicine");
+
+                    b.Navigation("Patient");
+                });
+
             modelBuilder.Entity("Domain.Entities.Doctor", b =>
                 {
                     b.HasOne("Domain.Entities.ApplicationUser", "ApplicationUser")
@@ -886,6 +969,17 @@ namespace Infrastructure.Migrations
                     b.Navigation("Doctor");
                 });
 
+            modelBuilder.Entity("Domain.Entities.StockAdjustment", b =>
+                {
+                    b.HasOne("Domain.Entities.Medicine", "Medicine")
+                        .WithMany("StockAdjustments")
+                        .HasForeignKey("MedicineId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Medicine");
+                });
+
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>
                 {
                     b.HasOne("Microsoft.AspNetCore.Identity.IdentityRole", null)
@@ -965,6 +1059,13 @@ namespace Infrastructure.Migrations
                     b.Navigation("Prescriptions");
                 });
 
+            modelBuilder.Entity("Domain.Entities.Medicine", b =>
+                {
+                    b.Navigation("Dispenses");
+
+                    b.Navigation("StockAdjustments");
+                });
+
             modelBuilder.Entity("Domain.Entities.Nurse", b =>
                 {
                     b.Navigation("Patients");
@@ -973,6 +1074,8 @@ namespace Infrastructure.Migrations
             modelBuilder.Entity("Domain.Entities.Patient", b =>
                 {
                     b.Navigation("Appointments");
+
+                    b.Navigation("Dispenses");
 
                     b.Navigation("MedicalRecords");
 

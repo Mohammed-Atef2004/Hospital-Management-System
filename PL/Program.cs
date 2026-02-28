@@ -3,6 +3,7 @@ using Domain.Repositories;
 using FluentValidation;
 using Infastructure.Presistence.Database;
 using Infastructure.Repositories;
+using Infrastructure.Repositories;
 using MediatR;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
@@ -33,9 +34,13 @@ namespace Presentation
             builder.Services.AddScoped<IDepartmentRepository, DepartmentRepository>();
             builder.Services.AddScoped<IDoctorRepository, DoctorRepository>();
             builder.Services.AddScoped<IPatientRepository, PatientRepository>();
+            builder.Services.AddScoped<IMedicineRepository, MedicineRepository>();
 
             // ================== MediatR ==================
             builder.Services.AddMediatR(typeof(ApplicationAssembly));
+
+            // ================== AutoMapper ==================
+            builder.Services.AddAutoMapper(typeof(ApplicationAssembly));
 
 
             // ================== FluentValidation (Global) ==================
