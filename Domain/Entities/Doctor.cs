@@ -1,15 +1,10 @@
 ﻿using Domain.Exceptions.Doctors;
-using System;
-using System.Collections.Generic;
-using System.Linq;
 
 namespace Domain.Entities
 {
 
-    public class Doctor : CommonData
+    public class Doctor : Staff
     {
-        public int Id { get; private set; }
-
         public string FirstName { get; private set; }
         public string LastName { get; private set; }
         public string Address { get; private set; }
@@ -24,7 +19,7 @@ namespace Domain.Entities
         public Department? Department { get; private set; }
 
         public virtual ICollection<Appointment> Appointments { get; private set; } = new List<Appointment>();
-        public virtual ICollection<Schedule> Schedules { get; private set; } = new List<Schedule>();
+
 
         // EF Core constructor
         private Doctor() { }
@@ -65,7 +60,7 @@ namespace Domain.Entities
         {
             Address = address;
             City = city;
-            UpdatedAt = DateTime.UtcNow; 
+            UpdatedAt = DateTime.UtcNow;
         }
 
         public void UpdateContactDetails(string? phoneNumber)
@@ -134,18 +129,18 @@ namespace Domain.Entities
         }
 
         // Schedule management
-        public void AddSchedule(Schedule schedule)
-        {
-            if (Schedules.Any(s => s.DayofWeek == schedule.DayofWeek && s.StartTime == schedule.StartTime))
-                throw new InvalidOperationException("Schedule already exists for this time.");
+        //public void AddSchedule(Schedule schedule)
+        //{
+        //    if (Schedules.Any(s => s.DayOfWeek == schedule.DayOfWeek && s.StartTime == schedule.StartTime))
+        //        throw new InvalidOperationException("Schedule already exists for this time.");
 
-            Schedules.Add(schedule);
-        }
+        //    Schedules.Add(schedule);
+        //}
 
-        public void RemoveSchedule(Schedule schedule)
-        {
-            Schedules.Remove(schedule);
-        }
+        //public void RemoveSchedule(Schedule schedule)
+        //{
+        //    Schedules.Remove(schedule);
+        //}
 
         // Appointment management
         public void BookAppointment(Appointment appointment, DateTime currentTime)
@@ -196,15 +191,15 @@ namespace Domain.Entities
         public bool IsAvailableForAppointment(DateTime dateTime)
         {
             var isWithinWorkingHours = Schedules.Any(s =>
-                s.DayofWeek == dateTime.DayOfWeek &&
+                s.DayOfWeek == dateTime.DayOfWeek &&
                 dateTime.TimeOfDay >= s.StartTime &&
                 dateTime.TimeOfDay < s.EndTime);
 
             if (!isWithinWorkingHours) return false;
 
-                
+
             var hasConflict = Appointments.Any(a =>
-                a.AppointmentDate == dateTime && !a.IsDeleted); 
+                a.AppointmentDate == dateTime && !a.IsDeleted);
 
             return !hasConflict;
         }

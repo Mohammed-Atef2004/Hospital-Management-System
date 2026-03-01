@@ -8,7 +8,7 @@ public class DoctorConfiguration : IEntityTypeConfiguration<Doctor>
     {
         builder.ToTable("Doctors");
 
-        builder.HasKey(d => d.Id);
+
 
         // ضبط خصائص النصوص
         builder.Property(d => d.FirstName).IsRequired().HasMaxLength(50);
@@ -39,11 +39,6 @@ public class DoctorConfiguration : IEntityTypeConfiguration<Doctor>
             .HasForeignKey(d => d.DepartmentId)
             .OnDelete(DeleteBehavior.SetNull); // ملاحظة: لو القسم اتمسح، الدكاترة يفضلوا موجودين بس بدون قسم
 
-        // علاقة 1:N مع جداول العمل
-        builder
-            .HasMany(d => d.Schedules)
-            .WithOne(s => s.Doctor)
-            .HasForeignKey(s => s.DoctorId)
-            .OnDelete(DeleteBehavior.Cascade); // لو اتمسح الدكتور، طبيعي جداوله تتمسح معاه
+
     }
 }

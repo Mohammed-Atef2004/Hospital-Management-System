@@ -1,11 +1,7 @@
 ﻿using Application.Common.Exceptions;
 using Domain.Repositories;
 using MediatR;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using Microsoft.EntityFrameworkCore;
 
 namespace Application.Features.Doctors.Commands.UpdateWeeklyShift
 {
@@ -18,18 +14,14 @@ namespace Application.Features.Doctors.Commands.UpdateWeeklyShift
         }
         public async Task<Unit> Handle(UpdateDoctorWorkShiftCommand request, CancellationToken cancellationToken)
         {
-            var doctor = await _unitOfWork.Doctor.GetByIdAsync(request.DoctorId);
+            var doctor = await _unitOfWork.Doctor.GetFirstOrDefaultAsync(
+                d => d.Id == request.DoctorId,
+                include: q => q.Include(d => d.Schedules));
             if (doctor == null)
             {
                 throw new NotFoundException("Doctor not found");
             }
-            var schedule = doctor.Schedules.FirstOrDefault(s => s.Id == request.ScheduleId);
-            if (schedule == null)
-            {
-                throw new NotFoundException("Schedule not found");
-            }
-            schedule.Update(request.NewDay, request.NewStart, request.NewEnd);
-            _unitOfWork.Doctor.Update(doctor);
+            doctor.UpdateSchedule(request.ScheduleId, request.NewDay, request.NewStart, request.NewEnd);
             await _unitOfWork.CompleteAsync();
             return Unit.Value;
         }

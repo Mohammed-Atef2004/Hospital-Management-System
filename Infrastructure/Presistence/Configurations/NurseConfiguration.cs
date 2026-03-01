@@ -1,22 +1,16 @@
 ﻿using Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Infastructure.Presistence.Configurations
 {
-    public class NurseConfiguration:IEntityTypeConfiguration<Nurse>
+    public class NurseConfiguration : IEntityTypeConfiguration<Nurse>
     {
         public void Configure(EntityTypeBuilder<Nurse> builder)
         {
             //Nurse relationships
             builder.ToTable("Nurses");
 
-            builder.HasKey(n => n.Id);
 
             builder
                .HasOne(n => n.ApplicationUser)

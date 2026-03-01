@@ -16,6 +16,8 @@ namespace Infastructure.Presistence.Database
         public DbSet<Patient> Patients { get; set; }
         public DbSet<Prescription> Prescriptions { get; set; }
         public DbSet<Pharmacy> Pharmacies { get; set; }
+        public DbSet<Schedule> Schedules { get; set; }
+        public DbSet<Staff> Staff { get; set; }
 
         public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options)
             : base(options)
@@ -24,6 +26,11 @@ namespace Infastructure.Presistence.Database
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
+            modelBuilder.Entity<Staff>().ToTable("Staff");
+
+            modelBuilder.Entity<Doctor>().ToTable("Doctors");
+
+            modelBuilder.Entity<Nurse>().ToTable("Nurses");
             base.OnModelCreating(modelBuilder);
             modelBuilder.ApplyConfigurationsFromAssembly(typeof(ApplicationDbContext).Assembly);
         }
