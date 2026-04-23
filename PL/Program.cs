@@ -47,6 +47,7 @@ namespace Presentation
             builder.Services.AddValidatorsFromAssembly(typeof(ApplicationAssembly).Assembly);
             builder.Services.AddTransient(typeof(IPipelineBehavior<,>), typeof(ValidationBehavior<,>));
             builder.Services.AddTransient(typeof(IPipelineBehavior<,>), typeof(TransactionBehavior<,>));
+            builder.Services.AddAutoMapper(typeof(ApplicationAssembly).Assembly);
 
             // ================== JWT Authentication ==================
             //var jwtSection = builder.Configuration.GetSection("JWT");
