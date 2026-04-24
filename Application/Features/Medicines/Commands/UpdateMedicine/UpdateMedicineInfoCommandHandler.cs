@@ -1,0 +1,41 @@
+﻿using Application.Common.Exceptions;
+using Domain.Repositories;
+using MediatR;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using Application.Features.Medicines.Commands.UpdateMedicine;
+
+namespace Application.Features.Medicines.Commands.UpdateMedicine
+{
+    public class UpdateMedicineCommandHandler: IRequestHandler<UpdateMedicineCommand>
+    {
+        private readonly IUnitOfWork _unitOfWork;
+
+        public UpdateMedicineCommandHandler(IUnitOfWork unitOfWork)
+        {
+            _unitOfWork = unitOfWork;
+        }
+
+        public async Task<Unit> Handle(UpdateMedicineCommand request, CancellationToken cancellationToken)
+        {
+            var medicine = await _unitOfWork.Medicine.GetByIdAsync(request.Id);
+
+            if (medicine == null)
+                throw new NotFoundException("Medicine not found");
+
+            medicine.UpdateInfo(
+                request.Name,
+                request.Price,
+                request.ExpiryDate,
+                request.UpdatedBy
+            );
+
+            await _unitOfWork.CompleteAsync();
+
+            return Unit.Value;
+        }
+    }
+}

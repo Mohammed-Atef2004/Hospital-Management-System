@@ -208,6 +208,113 @@ namespace Infrastructure.Migrations
                     b.ToTable("Departments", (string)null);
                 });
 
+            modelBuilder.Entity("Domain.Entities.Dispense", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("Date")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("MedicineId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("PatientId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("PharmacistId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("Quantity")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("MedicineId");
+
+                    b.HasIndex("PatientId");
+
+                    b.ToTable("Dispenses", (string)null);
+                });
+
+            modelBuilder.Entity("Domain.Entities.Doctor", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Address")
+                        .IsRequired()
+                        .HasMaxLength(250)
+                        .HasColumnType("nvarchar(250)");
+
+                    b.Property<string>("ApplicationUserId")
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<string>("City")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<DateTime?>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("CreatedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("DeletedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int?>("DepartmentId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("FirstName")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("LastName")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<string>("PhoneNumber")
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<string>("Specialization")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("UpdatedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ApplicationUserId")
+                        .IsUnique()
+                        .HasFilter("[ApplicationUserId] IS NOT NULL");
+
+                    b.HasIndex("DepartmentId");
+
+                    b.ToTable("Doctors", (string)null);
+                });
+
             modelBuilder.Entity("Domain.Entities.MedicalRecord", b =>
                 {
                     b.Property<int>("Id")
@@ -464,13 +571,7 @@ namespace Infrastructure.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<DateTime?>("CreatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("CreatedBy")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<int>("DayOfWeek")
+                    b.Property<int>("DayofWeek")
                         .HasColumnType("int");
 
                     b.Property<DateTime?>("DeletedAt")
@@ -508,6 +609,68 @@ namespace Infrastructure.Migrations
                         .IsUnique();
 
                     b.ToTable("Schedules", (string)null);
+                });
+            modelBuilder.Entity("Domain.Entities.StockAdjustment", b =>
+            {
+                b.Property<int>("Id")
+                    .ValueGeneratedOnAdd()
+                    .HasColumnType("int");
+
+                SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                b.Property<DateTime>("Date")
+                    .HasColumnType("datetime2");
+
+                b.Property<int>("MedicineId")
+                    .HasColumnType("int");
+
+                b.Property<int>("PharmacistId")
+                    .HasColumnType("int");
+
+                b.Property<int>("Quantity")
+                    .HasColumnType("int");
+
+                b.Property<string>("Reason")
+                    .IsRequired()
+                    .HasMaxLength(250)
+                    .HasColumnType("nvarchar(250)");
+
+                b.HasKey("Id");
+
+                b.HasIndex("MedicineId");
+
+                b.ToTable("StockAdjustments", (string)null);
+            });
+            modelBuilder.Entity("Domain.Entities.StockAdjustment", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("Date")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("MedicineId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("PharmacistId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("Quantity")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Reason")
+                        .IsRequired()
+                        .HasMaxLength(250)
+                        .HasColumnType("nvarchar(250)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("MedicineId");
+
+                    b.ToTable("StockAdjustments", (string)null);
                 });
 
             modelBuilder.Entity("Domain.Entities.Staff", b =>
@@ -863,6 +1026,17 @@ namespace Infrastructure.Migrations
                     b.Navigation("Staff");
                 });
 
+            modelBuilder.Entity("Domain.Entities.StockAdjustment", b =>
+                {
+                    b.HasOne("Domain.Entities.Medicine", "Medicine")
+                        .WithMany("StockAdjustments")
+                        .HasForeignKey("MedicineId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Medicine");
+                });
+
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>
                 {
                     b.HasOne("Microsoft.AspNetCore.Identity.IdentityRole", null)
@@ -981,9 +1155,16 @@ namespace Infrastructure.Migrations
                     b.Navigation("Prescriptions");
                 });
 
+            modelBuilder.Entity("Domain.Entities.Nurse", b =>
+                {
+                    b.Navigation("Patients");
+                });
+
             modelBuilder.Entity("Domain.Entities.Patient", b =>
                 {
                     b.Navigation("Appointments");
+
+                    b.Navigation("Dispenses");
 
                     b.Navigation("MedicalRecords");
 

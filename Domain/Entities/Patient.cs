@@ -23,5 +23,7 @@ namespace Domain.Entities
         public virtual ICollection<MedicalRecord>? MedicalRecords { get; set; } = new List<MedicalRecord>();
         public virtual ICollection<Appointment>? Appointments { get; set; } = new List<Appointment>();
         public virtual ICollection<Prescription>? Prescriptions { get; set; } = new List<Prescription>();
+        public virtual ICollection<Dispense> Dispenses { get; private set; } = new List<Dispense> ();
+
     }
 }

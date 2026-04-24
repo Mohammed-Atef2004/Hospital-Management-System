@@ -31,17 +31,23 @@ namespace Presentation
             builder.Services.AddScoped<IDepartmentRepository, DepartmentRepository>();
             builder.Services.AddScoped<IDoctorRepository, DoctorRepository>();
             builder.Services.AddScoped<IPatientRepository, PatientRepository>();
+            builder.Services.AddScoped<IMedicineRepository, MedicineRepository>();
             builder.Services.AddScoped<INurseRepository, NurseRepository>();
             builder.Services.AddScoped<IScheduleRepository, ScheduleRepository>();
 
             // ================== MediatR ==================
             builder.Services.AddMediatR(typeof(ApplicationAssembly));
+
+            // ================== AutoMapper ==================
+            builder.Services.AddAutoMapper(typeof(ApplicationAssembly));
+
             builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
 
             // ================== FluentValidation (Global) ==================
             builder.Services.AddValidatorsFromAssembly(typeof(ApplicationAssembly).Assembly);
             builder.Services.AddTransient(typeof(IPipelineBehavior<,>), typeof(ValidationBehavior<,>));
             builder.Services.AddTransient(typeof(IPipelineBehavior<,>), typeof(TransactionBehavior<,>));
+            builder.Services.AddAutoMapper(typeof(ApplicationAssembly).Assembly);
 
             // ================== JWT Authentication ==================
             //var jwtSection = builder.Configuration.GetSection("JWT");

@@ -16,6 +16,8 @@ namespace Infastructure.Presistence.Database
         public DbSet<Patient> Patients { get; set; }
         public DbSet<Prescription> Prescriptions { get; set; }
         public DbSet<Pharmacy> Pharmacies { get; set; }
+        public DbSet<StockAdjustment> StockAdjustments { get; set; }
+        public DbSet<Dispense> Dispenses { get; set; }
         public DbSet<Schedule> Schedules { get; set; }
         public DbSet<Staff> Staff { get; set; }
 
