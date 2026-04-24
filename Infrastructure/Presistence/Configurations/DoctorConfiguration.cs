@@ -1,4 +1,4 @@
-﻿using Domain.Entities;
+﻿using Domain.Doctors;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
@@ -19,11 +19,11 @@ public class DoctorConfiguration : IEntityTypeConfiguration<Doctor>
         builder.Property(d => d.City).HasMaxLength(50);
 
         // علاقة 1:1 مع ApplicationUser
-        builder
-           .HasOne(d => d.ApplicationUser)
-           .WithOne(u => u.DoctorProfile) // تأكد أن الاسم في ApplicationUser هو DoctorProfile
-           .HasForeignKey<Doctor>(d => d.ApplicationUserId)
-           .OnDelete(DeleteBehavior.Restrict);
+        //builder
+        //   .HasOne(d => d.ApplicationUser)
+        //   .WithOne(u => u.DoctorProfile) // تأكد أن الاسم في ApplicationUser هو DoctorProfile
+        //   .HasForeignKey<Doctor>(d => d.ApplicationUserId)
+        //   .OnDelete(DeleteBehavior.Restrict);
 
         // علاقة 1:N مع المواعيد
         builder

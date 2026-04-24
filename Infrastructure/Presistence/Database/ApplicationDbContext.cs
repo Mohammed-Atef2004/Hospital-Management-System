@@ -1,12 +1,17 @@
-﻿using Domain.Entities;
+﻿using Domain.Departments;
+using Domain.Doctors;
+using Domain.Entities;
+using Domain.Medicines;
+using Domain.Nurses;
+using Domain.Schedules;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 
 namespace Infastructure.Presistence.Database
 {
-    public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
+    public class ApplicationDbContext : IdentityDbContext<IdentityUser>
     {
-        public DbSet<ApplicationUser> ApplicationUsers { get; set; }
         public DbSet<Appointment> Appointments { get; set; }
         public DbSet<Department> Departments { get; set; }
         public DbSet<Doctor> Doctors { get; set; }

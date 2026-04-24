@@ -1,4 +1,7 @@
-﻿using Domain.Exceptions.Schedule;
+﻿
+
+using Domain.Schedules;
+using Domain.Schedules.Exceptions;
 
 namespace Domain.Entities
 {

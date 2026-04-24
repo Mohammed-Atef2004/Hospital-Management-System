@@ -1,4 +1,5 @@
-﻿using Domain.Exceptions.Medicine;
+﻿using Domain.Medicines;
+using Domain.Medicines.Exceptions;
 using System;
 using System.Collections.Generic;
 using System.Linq;

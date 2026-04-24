@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Domain.Nurses;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
@@ -16,8 +17,6 @@ namespace Domain.Entities
         public string Address { get; set; }
         public string? City { get; set; }
         public string? PhoneNumber { get; set; }
-        public required string? ApplicationUserId { get; set; }
-        public  ApplicationUser? ApplicationUser { get; set; }
         public int? NurseId { get; set; }
         public  Nurse? Nurse { get; set; }
         public virtual ICollection<MedicalRecord>? MedicalRecords { get; set; } = new List<MedicalRecord>();

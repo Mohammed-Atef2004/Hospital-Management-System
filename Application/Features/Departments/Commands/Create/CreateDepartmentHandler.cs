@@ -1,6 +1,5 @@
 ﻿using Application.Common.Exceptions;
-using Domain.Entities;
-using Domain.Exceptions.Department;
+using Domain.Departments;
 using Domain.Repositories;
 using MediatR;
 using System;

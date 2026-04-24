@@ -1,4 +1,4 @@
-﻿using Domain.Entities;
+﻿using Domain.Medicines;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using System;

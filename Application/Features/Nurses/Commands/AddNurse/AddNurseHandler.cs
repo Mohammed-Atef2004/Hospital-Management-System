@@ -1,4 +1,4 @@
-﻿using Domain.Entities;
+﻿using Domain.Nurses;
 using Domain.Repositories;
 using MediatR;
 

@@ -1,6 +1,7 @@
 ﻿using Application.Features.Medicines.DTOs;
 using AutoMapper;
 using Domain.Entities;
+using Domain.Medicines;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -13,7 +14,7 @@ namespace Application.Features.Medicines.Mappings
     {
         public MedicineProfile()
         {
-            CreateMap<Domain.Entities.Medicine, DTOs.MedicineDTO>();
+            CreateMap<Medicine, DTOs.MedicineDTO>();
 
             CreateMap<StockAdjustment, StockAdjustmentDTO>();
 

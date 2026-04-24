@@ -1,5 +1,5 @@
-﻿using Domain.Entities;
-using Domain.Exceptions.Doctors;
+﻿using Domain.Doctors.Exceptions;
+using Domain.Entities;
 using FluentAssertions;
 
 namespace Domain.Tests.Doctor
@@ -10,7 +10,7 @@ namespace Domain.Tests.Doctor
         public void BookAppointment_WhenDoctorNotAvailable_ShouldThrowDoctorNotAvailableException()
         {
             // Arrange
-            var doctor = Entities.Doctor.Create("Ahmed", "Ali", "Addr", "City", "Spec");
+            var doctor = Doctors.Doctor.Create("Ahmed", "Ali", "Addr", "City", "Spec");
             var appointmentDate = DateTime.UtcNow.AddDays(7);
 
             var appointment = new Appointment
@@ -30,7 +30,7 @@ namespace Domain.Tests.Doctor
         public void BookAppointment_InPast_ShouldThrowInvalidOperationException()
         {
             // Arrange
-            var doctor = Entities.Doctor.Create("Ahmed", "Ali", "Addr", "City", "Spec");
+            var doctor = Doctors.Doctor.Create("Ahmed", "Ali", "Addr", "City", "Spec");
             var pastDate = DateTime.UtcNow.AddDays(-1);
 
             var appointment = new Appointment

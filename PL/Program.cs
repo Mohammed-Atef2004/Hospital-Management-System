@@ -1,5 +1,10 @@
 using Application;
+using Domain.Departments;
+using Domain.Doctors;
+using Domain.Medicines;
+using Domain.Nurses;
 using Domain.Repositories;
+using Domain.Schedules;
 using FluentValidation;
 using Infastructure.Presistence.Database;
 using Infastructure.Repositories;

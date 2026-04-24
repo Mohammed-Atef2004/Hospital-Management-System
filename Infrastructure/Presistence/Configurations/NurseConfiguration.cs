@@ -1,4 +1,4 @@
-﻿using Domain.Entities;
+﻿using Domain.Nurses;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
@@ -12,11 +12,11 @@ namespace Infastructure.Presistence.Configurations
             builder.ToTable("Nurses");
 
 
-            builder
-               .HasOne(n => n.ApplicationUser)
-               .WithOne(au => au.NurseProfile)
-                .HasForeignKey<Nurse>(n => n.ApplicationUserId)
-                .OnDelete(DeleteBehavior.Restrict);
+            //builder
+            //   .HasOne(n => n.ApplicationUser)
+            //   .WithOne(au => au.NurseProfile)
+            //    .HasForeignKey<Nurse>(n => n.ApplicationUserId)
+            //    .OnDelete(DeleteBehavior.Restrict);
 
             builder
                 .HasOne(n => n.Department)

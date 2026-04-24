@@ -1,5 +1,4 @@
-﻿using Domain.Entities;
-using Domain.Repositories;
+﻿using Domain.Nurses;
 using Infastructure.Presistence.Database;
 using Infastructure.Repositories;
 

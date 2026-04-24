@@ -1,6 +1,8 @@
 ﻿using Application.Features.Nurses.DTOs;
 using AutoMapper;
 using Domain.Entities;
+using Domain.Nurses;
+using Domain.Schedules;
 
 
 namespace Application.Features.Nurses.Mappings

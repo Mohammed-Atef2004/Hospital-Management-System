@@ -26,9 +26,7 @@ namespace Infastructure.Repositories
             if (existingPatient != null)
             {
                 existingPatient.NurseId = patient.NurseId;
-                existingPatient.ApplicationUser=patient.ApplicationUser;
                 existingPatient.Appointments= patient.Appointments;
-                existingPatient.ApplicationUserId = patient.ApplicationUserId;
                 existingPatient.MedicalRecords = patient.MedicalRecords;
                 existingPatient.Prescriptions = patient.Prescriptions;
                 existingPatient.FirstName = patient.FirstName;

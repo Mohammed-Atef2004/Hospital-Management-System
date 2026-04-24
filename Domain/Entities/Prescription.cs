@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Domain.Doctors;
+using System;
 
 namespace Domain.Entities
 {

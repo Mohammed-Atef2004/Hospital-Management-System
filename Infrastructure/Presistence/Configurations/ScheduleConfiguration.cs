@@ -1,4 +1,4 @@
-﻿using Domain.Entities;
+﻿using Domain.Schedules;
 using Microsoft.EntityFrameworkCore;
 
 namespace Infastructure.Presistence.Configurations

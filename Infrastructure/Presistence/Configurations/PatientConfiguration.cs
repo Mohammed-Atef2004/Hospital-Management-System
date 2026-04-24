@@ -18,11 +18,11 @@ namespace Infastructure.Presistence.Configurations
 
             builder.HasKey(p => p.Id);
 
-            builder
-               .HasOne(p => p.ApplicationUser)
-               .WithOne(au => au.PatientProfile)
-                .HasForeignKey<Patient>(p => p.ApplicationUserId)
-                .OnDelete(DeleteBehavior.Restrict);
+            //builder
+            //   .HasOne(p => p.ApplicationUser)
+            //   .WithOne(au => au.PatientProfile)
+            //    .HasForeignKey<Patient>(p => p.ApplicationUserId)
+            //    .OnDelete(DeleteBehavior.Restrict);
 
             builder
                 .HasMany(p => p.Appointments)

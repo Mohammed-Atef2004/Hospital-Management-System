@@ -4,7 +4,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using Domain.Entities;
 
 namespace Domain.Tests.Doctor
 {
@@ -14,7 +13,7 @@ namespace Domain.Tests.Doctor
         public void Create_WithValidData_ShouldReturnDoctorInstance()
         {
             // Arrange & Act
-            var doctor = Domain.Entities.Doctor.Create("Ahmed", "Ali", "Street 10", "Cairo", "Cardiology");
+            var doctor = Doctors.Doctor.Create("Ahmed", "Ali", "Street 10", "Cairo", "Cardiology");
 
             // Assert
             doctor.Should().NotBeNull();
@@ -28,7 +27,7 @@ namespace Domain.Tests.Doctor
         public void Create_WithInvalidNames_ShouldThrowArgumentException(string firstName, string lastName)
         {
             // Act
-            Action act = () => Domain.Entities.Doctor.Create(firstName, lastName, "Address", "City", "Spec");
+            Action act = () => Doctors.Doctor.Create(firstName, lastName, "Address", "City", "Spec");
 
             // Assert
             act.Should().Throw<ArgumentException>();

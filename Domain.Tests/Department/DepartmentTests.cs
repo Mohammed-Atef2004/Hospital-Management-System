@@ -1,5 +1,4 @@
-﻿using Domain.Entities;
-using Domain.Exceptions.Department;
+﻿using Domain.Departments;
 using FluentAssertions;
 using Xunit;
 

@@ -7,8 +7,26 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Folder Include="Enums\" />
-    <Folder Include="Constants\" />
+    <Folder Include="Departments\Enums\" />
+    <Folder Include="Departments\Events\" />
+    <Folder Include="Departments\ValueObjects\" />
+    <Folder Include="Departments\Rules\" />
+    <Folder Include="Doctors\Enums\" />
+    <Folder Include="Doctors\Events\" />
+    <Folder Include="Doctors\Rules\" />
+    <Folder Include="Doctors\ValueObjects\" />
+    <Folder Include="Medicines\Enums\" />
+    <Folder Include="Medicines\Events\" />
+    <Folder Include="Medicines\Rules\" />
+    <Folder Include="Medicines\ValueObjects\" />
+    <Folder Include="Nurses\Enums\" />
+    <Folder Include="Nurses\Events\" />
+    <Folder Include="Nurses\Rules\" />
+    <Folder Include="Nurses\ValueObjects\" />
+    <Folder Include="Schedules\Enums\" />
+    <Folder Include="Schedules\Events\" />
+    <Folder Include="Schedules\Rules\" />
+    <Folder Include="Schedules\ValueObjects\" />
   </ItemGroup>
 
   <ItemGroup>

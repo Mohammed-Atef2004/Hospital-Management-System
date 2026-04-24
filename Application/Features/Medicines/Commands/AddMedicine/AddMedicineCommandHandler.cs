@@ -1,6 +1,7 @@
 ﻿using Application.Common.Exceptions;
 using Application.Features.Doctors.Commands.UpdateSpecialization;
 using Domain.Entities;
+using Domain.Medicines;
 using Domain.Repositories;
 using MediatR;
 using System;

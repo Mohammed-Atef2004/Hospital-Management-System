@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using Domain.Departments;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -11,7 +12,7 @@ namespace Application.Features.Departments.Mappings
     {
         public DepartmentProfile()
         {
-            CreateMap<Domain.Entities.Department, DTOs.DepartmentDto>().ReverseMap();   
+            CreateMap<Department, DTOs.DepartmentDto>().ReverseMap();   
         }
     }
 }

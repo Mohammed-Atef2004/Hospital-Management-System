@@ -13,7 +13,7 @@ namespace Domain.Tests.Doctor
         public void Deactivate_ShouldSetIsDeletedToTrue()
         {
             // Arrange
-            var doctor = Domain.Entities.Doctor.Create("Ahmed", "Ali", "Addr", "City", "Spec");
+            var doctor = Doctors.Doctor.Create("Ahmed", "Ali", "Addr", "City", "Spec");
 
             // Act
             doctor.Deactivate();
@@ -26,7 +26,7 @@ namespace Domain.Tests.Doctor
         public void RelocateDoctorOffice_ShouldUpdateAddressAndTimestamp()
         {
             // Arrange
-            var doctor = Domain.Entities.Doctor.Create("Ahmed", "Ali", "Old Address", "Old City", "Spec");
+            var doctor = Doctors.Doctor.Create("Ahmed", "Ali", "Old Address", "Old City", "Spec");
 
             // Act
             doctor.RelocateDoctorOffice("New Address", "New City");

@@ -18,11 +18,11 @@ namespace Application.Features.Doctors.Commands.GrantSystemAccess
         }
         public async Task<Unit> Handle(GrantSystemAccessToDoctorCommand request, CancellationToken cancellationToken)
         {
-            var doctor = await _unitOfWork.Doctor.GetByIdAsync(request.DoctorId);
-            if (doctor == null) throw new NotFoundException($"Doctor with id {request.DoctorId} not found.");
-            doctor.GrantSystemAccess(request.ApplicationUserId);
-            _unitOfWork.Doctor.Update(doctor);
-            await _unitOfWork.CompleteAsync();
+            //var doctor = await _unitOfWork.Doctor.GetByIdAsync(request.DoctorId);
+            //if (doctor == null) throw new NotFoundException($"Doctor with id {request.DoctorId} not found.");
+            //doctor.GrantSystemAccess(request.ApplicationUserId);
+            //_unitOfWork.Doctor.Update(doctor);
+            //await _unitOfWork.CompleteAsync();
             return Unit.Value;
         }
     }

@@ -20,7 +20,7 @@ namespace Application.Features.Doctors.Commands.RevokeSystemAccess
         {
             var doctor = await _unitOfWork.Doctor.GetByIdAsync(request.DoctorId);
             if (doctor == null) throw new NotFoundException($"Doctor with id {request.DoctorId} not found.");
-            doctor.RevokeSystemAccess();
+           // doctor.RevokeSystemAccess();
             _unitOfWork.Doctor.Update(doctor);
             await _unitOfWork.CompleteAsync();
             return Unit.Value;
