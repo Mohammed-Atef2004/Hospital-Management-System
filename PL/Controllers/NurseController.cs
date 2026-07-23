@@ -1,13 +1,15 @@
 ﻿using Application.Features.Nurses.Commands.AddNurse;
-using Application.Features.Nurses.Commands.CreateShift;
+using Application.Features.Nurses.Commands.AssignPatientToNurse;
+using Application.Features.Nurses.Commands.ChangeHeadNurseStatus;
+using Application.Features.Nurses.Commands.ChangeNurseDepartment;
 using Application.Features.Nurses.Commands.DeleteNurse;
-using Application.Features.Nurses.Commands.DeleteShift;
+using Application.Features.Nurses.Commands.EndPatientAssignment;
+using Application.Features.Nurses.Commands.RecordVitalSigns;
+using Application.Features.Nurses.Commands.TransferPatientToAnotherNurse;
 using Application.Features.Nurses.Commands.UpdateNurse;
-using Application.Features.Nurses.Commands.UpdateShift;
 using Application.Features.Nurses.Queries.GetAllNurses;
-using Application.Features.Nurses.Queries.GetAllShifts;
 using Application.Features.Nurses.Queries.GetNurseById;
-using Application.Features.Nurses.Queries.GetNursePatients;
+using Application.Features.Nurses.Queries.GetShiftAssignedPatients;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
 
@@ -31,13 +33,6 @@ namespace API.Controllers
             return Ok(result);
         }
 
-        [HttpGet("{nurseId}/shifts")]
-        public async Task<IActionResult> GetShifts(int nurseId)
-        {
-            var result = await _mediator.Send(new GetNurseShiftsQuery(nurseId));
-            return Ok(result);
-        }
-
         [HttpGet("{id}")]
         public async Task<IActionResult> GetNurseById(int id)
         {
@@ -45,10 +40,16 @@ namespace API.Controllers
             return result != null ? Ok(result) : NotFound();
         }
 
-        [HttpGet("{id}/patients")]
-        public async Task<IActionResult> GetNursePatients(int id)
+        [HttpGet("{shiftId}/nurses/{nurseId}/patients")]
+        public async Task<ActionResult> GetShiftAssignedPatients(
+            [FromRoute] int shiftId,
+            [FromRoute] int nurseId,
+            CancellationToken cancellationToken)
         {
-            var result = await _mediator.Send(new GetNursePatientsQuery(id));
+            var query = new GetShiftAssignedPatientsQuery(shiftId, nurseId);
+
+            var result = await _mediator.Send(query, cancellationToken);
+
             return Ok(result);
         }
 
@@ -60,34 +61,15 @@ namespace API.Controllers
             return Ok(nurseId);
 
         }
-        [HttpPost("shift")]
-        public async Task<IActionResult> CreateShift(CreateShiftCommand command)
-        {
-            var result = await _mediator.Send(command);
-            return Ok(result);
 
-        }
 
-        [HttpPut("{id}/update")]
-        public async Task<IActionResult> UpdateNurse(int id, [FromBody] UpdateNurseCommand command)
+        [HttpPut("/update")]
+        public async Task<IActionResult> UpdateNurse([FromBody] UpdateNurseCommand command)
         {
-            var updatedCommand = command with { NurseId = id };
-            await _mediator.Send(updatedCommand);
+            await _mediator.Send(command);
             return NoContent();
         }
 
-        [HttpPut("{nurseId}/update/shifts/{shiftId}")]
-        public async Task<IActionResult> UpdateShift(
-            int nurseId,
-            int shiftId,
-            [FromBody] UpdateShiftCommand command)
-        {
-            if (nurseId != command.NurseId || shiftId != command.ShiftId)
-                return BadRequest("Route ids mismatch");
-            var updatedCommand = command with { NurseId = nurseId, ShiftId = shiftId };
-            await _mediator.Send(updatedCommand);
-            return NoContent();
-        }
 
 
         [HttpDelete("{id}/delete")]
@@ -97,10 +79,70 @@ namespace API.Controllers
             return NoContent();
         }
 
-        [HttpDelete("{nurseId}/shifts/{Shiftid}")]
-        public async Task<IActionResult> DeleteShift(int nurseId, int Shiftid)
+
+        [HttpPost("assign")]
+        public async Task<IActionResult> AssignPatientToNurse(
+    [FromBody] AssignPatientToNurseCommand command,
+    CancellationToken cancellationToken)
         {
-            await _mediator.Send(new DeleteShiftCommand(nurseId, Shiftid));
+            var assignmentId = await _mediator.Send(command, cancellationToken);
+
+            return Ok(assignmentId);
+        }
+
+        [HttpPost("transfer-assignment")]
+        public async Task<IActionResult> TransferPatientToAnotherNurse(
+        TransferPatientToAnotherNurseCommand command,
+        CancellationToken cancellationToken)
+        {
+            await _mediator.Send(command, cancellationToken);
+            return NoContent();
+        }
+
+        [HttpPost("end-assignment")]
+        public async Task<IActionResult> EndPatientAssignment(
+            EndPatientAssignmentCommand command,
+            CancellationToken cancellationToken)
+        {
+            await _mediator.Send(command, cancellationToken);
+            return NoContent();
+        }
+
+        [HttpPost("record-vital-signs")]
+        public async Task<IActionResult> RecordVitalSigns(
+    RecordVitalSignsCommand command,
+    CancellationToken cancellationToken)
+        {
+            var result = await _mediator.Send(command, cancellationToken);
+
+            return Ok(result);
+        }
+
+        [HttpPut("{nurseId}/department/{departmentId}")]
+        public async Task<IActionResult> ChangeDepartment(int nurseId,
+          int departmentId,
+         CancellationToken cancellationToken)
+        {
+            await _mediator.Send(
+                new ChangeNurseDepartmentCommand(nurseId, departmentId),
+                cancellationToken);
+
+            return NoContent();
+        }
+
+
+
+        [HttpPut("{nurseId}/head-nurse-status")]
+        public async Task<IActionResult> ChangeHeadNurseStatus(int nurseId,
+         [FromBody] bool isHeadNurse,
+          CancellationToken cancellationToken)
+        {
+            await _mediator.Send(
+                new ChangeHeadNurseStatusCommand(
+                    nurseId,
+                    isHeadNurse),
+                cancellationToken);
+
             return NoContent();
         }
     }

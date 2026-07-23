@@ -1,16 +1,11 @@
 ﻿using Application.Common.Exceptions;
+using Domain.Medicines;
 using Domain.Repositories;
 using MediatR;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Application.Features.Medicines.Commands.UpdateMedicine;
 
 namespace Application.Features.Medicines.Commands.UpdateMedicine
 {
-    public class UpdateMedicineCommandHandler: IRequestHandler<UpdateMedicineCommand>
+    public class UpdateMedicineCommandHandler : IRequestHandler<UpdateMedicineCommand>
     {
         private readonly IUnitOfWork _unitOfWork;
 
@@ -24,7 +19,7 @@ namespace Application.Features.Medicines.Commands.UpdateMedicine
             var medicine = await _unitOfWork.Medicine.GetByIdAsync(request.Id);
 
             if (medicine == null)
-                throw new NotFoundException("Medicine not found");
+                throw new NotFoundException(nameof(Medicine), request.Id);
 
             medicine.UpdateInfo(
                 request.Name,

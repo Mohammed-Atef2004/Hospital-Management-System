@@ -1,6 +1,6 @@
 ﻿using Domain.Departments;
+using Domain.Departments.Exceptions;
 using FluentAssertions;
-using Xunit;
 
 namespace Domain.Tests.Departments
 {

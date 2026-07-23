@@ -1,15 +1,11 @@
 ﻿using Application.Common.Exceptions;
+using Domain.Medicines;
 using Domain.Repositories;
 using MediatR;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Application.Features.Medicines.Commands.DeleteMedicine
 {
-    public class DeleteMedicineCommandHandler: IRequestHandler<DeleteMedicineCommand>
+    public class DeleteMedicineCommandHandler : IRequestHandler<DeleteMedicineCommand>
     {
         private readonly IUnitOfWork _unitOfWork;
 
@@ -23,7 +19,7 @@ namespace Application.Features.Medicines.Commands.DeleteMedicine
             var medicine = await _unitOfWork.Medicine.GetByIdAsync(request.Id);
 
             if (medicine == null)
-                throw new NotFoundException("Medicine not found");
+                throw new NotFoundException(nameof(Medicine), request.Id);
 
             medicine.SoftDelete(medicine.DeletedBy);
             await _unitOfWork.CompleteAsync();

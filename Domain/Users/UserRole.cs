@@ -1,9 +1,10 @@
-namespace  Domain.Users;
+namespace Domain.Users;
 
 public enum UserRole
 {
-    Student = 0,  
-    Instructor = 1,   
-    Admin = 2,   
-    SuperAdmin = 3    
+    Doctor = 0,
+    Nurse = 1,
+    Patient = 2,
+    Admin = 3
+
 }

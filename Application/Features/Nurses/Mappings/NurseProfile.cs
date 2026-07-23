@@ -2,7 +2,6 @@
 using AutoMapper;
 using Domain.Entities;
 using Domain.Nurses;
-using Domain.Schedules;
 
 
 namespace Application.Features.Nurses.Mappings
@@ -20,12 +19,7 @@ namespace Application.Features.Nurses.Mappings
                     src.PhoneNumber,
                     src.DepartmentId
              ));
-            CreateMap<Schedule, ShiftDTO>()
-                .ConstructUsing(src => new ShiftDTO(
-                    src.DayOfWeek,
-                    src.StartTime,
-                    src.EndTime
-                ));
+
             CreateMap<Patient, PatientDTO>()
                 .ConstructUsing(src => new PatientDTO(
                     src.Id,

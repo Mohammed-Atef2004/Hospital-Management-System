@@ -1,11 +1,11 @@
-﻿using  Domain.SharedKernel;
-using  Domain.Users.Errors;
-using  Domain.Users.Events;
-using  Domain.Users.Rules;
-using  Domain.Users.ValueObjects;
-using static  Domain.Users.Errors.UserErrors;
+﻿using Domain.SharedKernel;
+using Domain.Users.Errors;
+using Domain.Users.Events;
+using Domain.Users.Rules;
+using Domain.Users.ValueObjects;
+using static Domain.Users.Errors.UserErrors;
 
-namespace  Domain.Users;
+namespace Domain.Users;
 
 
 public sealed class User : AggregateRoot<Guid>
@@ -90,7 +90,7 @@ public sealed class User : AggregateRoot<Guid>
         string lastName,
         bool isEmailTaken,
         bool isUsernameTaken,
-        UserRole role = UserRole.Student)
+        UserRole role = UserRole.Patient)
     {
         // ── Validate identity reference ──
         if (string.IsNullOrWhiteSpace(identityId))
@@ -186,7 +186,7 @@ public sealed class User : AggregateRoot<Guid>
         if (Role == newRole) return Result.Failure(UserErrors.RoleAlreadyAssigned);
 
         // SuperAdmin is only seeded, never assigned through normal flow
-        if (newRole == UserRole.SuperAdmin)
+        if (newRole == UserRole.Admin)
             return Result.Failure(UserErrors.CannotAssignSuperAdminRole);
 
         var oldRole = Role;
@@ -197,13 +197,13 @@ public sealed class User : AggregateRoot<Guid>
     }
 
     /// <summary>Convenience shortcut used by the platform.</summary>
-    public Result PromoteToInstructor() => ChangeRole(UserRole.Instructor);
+    //public Result PromoteToInstructor() => ChangeRole(UserRole.Instructor);
 
     // ─── Lifecycle Operations ─────────────────────────────────────────────────
 
     public Result Deactivate(string reason)
     {
-        if (Role == UserRole.SuperAdmin)
+        if (Role == UserRole.Admin)
             return Result.Failure(UserErrors.CannotDeactivateSuperAdmin);
 
         if (!IsActive)
@@ -229,7 +229,7 @@ public sealed class User : AggregateRoot<Guid>
     /// <summary>Soft delete — data is retained, user cannot log in.</summary>
     public Result Delete(string reason)
     {
-        if (Role == UserRole.SuperAdmin)
+        if (Role == UserRole.Admin)
             return Result.Failure(UserErrors.CannotDeleteSuperAdmin);
 
         if (IsDeleted)

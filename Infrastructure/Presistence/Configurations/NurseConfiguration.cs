@@ -23,6 +23,10 @@ namespace Infastructure.Presistence.Configurations
                 .WithMany(d => d.Nurses)
                 .HasForeignKey(n => n.DepartmentId)
                 .OnDelete(DeleteBehavior.Restrict);
+
+            builder.Metadata
+            .FindNavigation(nameof(Nurse.PatientAssignments))!
+            .SetPropertyAccessMode(PropertyAccessMode.Field);
         }
     }
 }

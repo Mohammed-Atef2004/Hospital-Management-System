@@ -1,6 +1,8 @@
+using API.Middlewares;
 using Application;
 using Domain.Departments;
 using Domain.Doctors;
+using Domain.Interfaces.Services;
 using Domain.Medicines;
 using Domain.Nurses;
 using Domain.Repositories;
@@ -9,6 +11,7 @@ using FluentValidation;
 using Infastructure.Presistence.Database;
 using Infastructure.Repositories;
 using Infrastructure.Repositories;
+using Infrastructure.Services;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 
@@ -38,7 +41,8 @@ namespace Presentation
             builder.Services.AddScoped<IPatientRepository, PatientRepository>();
             builder.Services.AddScoped<IMedicineRepository, MedicineRepository>();
             builder.Services.AddScoped<INurseRepository, NurseRepository>();
-            builder.Services.AddScoped<IScheduleRepository, ScheduleRepository>();
+            builder.Services.AddScoped<ICurrentUserService, CurrentUserService>();
+            builder.Services.AddScoped<IShiftRepository, ShiftRepository>();
 
             // ================== MediatR ==================
             builder.Services.AddMediatR(typeof(ApplicationAssembly));
@@ -81,8 +85,8 @@ namespace Presentation
             //});
 
             var app = builder.Build();
+            app.UseMiddleware<ExceptionHandlingMiddleware>();
 
-            // ================== Middleware ==================
             if (app.Environment.IsDevelopment())
             {
                 app.UseSwagger();
@@ -91,7 +95,7 @@ namespace Presentation
 
             app.UseHttpsRedirection();
 
-            app.UseAuthentication(); // IMPORTANT
+            app.UseAuthentication();
             app.UseAuthorization();
 
             app.MapControllers();

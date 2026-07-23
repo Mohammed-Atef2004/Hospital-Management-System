@@ -1,6 +1,7 @@
 ﻿using Domain.Departments;
 using Domain.Doctors.Exceptions;
 using Domain.Entities;
+using Domain.personnel;
 
 namespace Domain.Doctors
 {
@@ -190,11 +191,10 @@ namespace Domain.Doctors
 
         public bool IsAvailableForAppointment(DateTime dateTime)
         {
-            var isWithinWorkingHours = Schedules.Any(s =>
-                s.DayOfWeek == dateTime.DayOfWeek &&
-                dateTime.TimeOfDay >= s.StartTime &&
-                dateTime.TimeOfDay < s.EndTime);
-
+            var isWithinWorkingHours = Shifts.Any(s => !s.IsDeleted &&
+             s.IsActive &&
+            dateTime >= s.StartDateTime &&
+            dateTime <= s.EndDateTime);
             if (!isWithinWorkingHours) return false;
 
 

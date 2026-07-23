@@ -1,18 +1,13 @@
 ﻿using Application.Common.Exceptions;
 using Application.Features.Medicines.DTOs;
-using Application.Features.Medicines.Queries.GetById;
 using AutoMapper;
+using Domain.Medicines;
 using Domain.Repositories;
 using MediatR;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Application.Features.Medicines.Queries.GetWithDetails
 {
-    public class GetMedicineWithDetailsQueryHandler : IRequestHandler<GetMedicineWithDetailsQuery,MedicineDetailsDTO>
+    public class GetMedicineWithDetailsQueryHandler : IRequestHandler<GetMedicineWithDetailsQuery, MedicineDetailsDTO>
     {
         private readonly IUnitOfWork _unitOfWork;
         private readonly IMapper _mapper;
@@ -26,7 +21,7 @@ namespace Application.Features.Medicines.Queries.GetWithDetails
             var medicine = await _unitOfWork.Medicine.GetMedicineWithDetailsAsync(request.Id);
             if (medicine == null)
             {
-                throw new NotFoundException("This Medicine not found.");
+                throw new NotFoundException(nameof(Medicine), request.Id);
             }
             var medicineDetailsDto = _mapper.Map<MedicineDetailsDTO>(medicine);
 

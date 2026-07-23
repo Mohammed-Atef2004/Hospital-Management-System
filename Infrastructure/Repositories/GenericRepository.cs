@@ -2,12 +2,7 @@
 using Domain.Repositories;
 using Infastructure.Presistence.Database;
 using Microsoft.EntityFrameworkCore;
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Linq.Expressions;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Infastructure.Repositories
 {
@@ -64,6 +59,10 @@ namespace Infastructure.Repositories
 
         public void Remove(T entity)
             => _dbSet.Remove(entity);
+        public async Task<bool> ExistsAsync(Expression<Func<T, bool>> predicate, CancellationToken cancellationToken = default)
+        {
+            return await _dbSet.AnyAsync(predicate, cancellationToken);
+        }
     }
 
 }

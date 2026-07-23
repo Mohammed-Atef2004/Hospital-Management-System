@@ -2,7 +2,10 @@
 using Domain.Doctors;
 using Domain.Medicines;
 using Domain.Nurses;
+using Domain.PatientAssignments;
+using Domain.personnel;
 using Domain.Schedules;
+
 
 namespace Domain.Repositories
 {
@@ -10,10 +13,13 @@ namespace Domain.Repositories
     {
         IPatientRepository Patient { get; }
         IDepartmentRepository Department { get; }
-		IDoctorRepository Doctor { get; }
+        IDoctorRepository Doctor { get; }
         IMedicineRepository Medicine { get; }
-        IScheduleRepository Schedule { get; }
+        IShiftRepository Shift { get; }
         INurseRepository Nurse { get; }
+        IStaffRepository Staff { get; }
+        IAssignPatientRepository PatientAssignment
+        { get; }
 
         Task<int> CompleteAsync();
     }

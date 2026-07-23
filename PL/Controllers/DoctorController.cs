@@ -1,15 +1,13 @@
 ﻿using Application.Features.Doctors.Commands.Deactivate;
 using Application.Features.Doctors.Commands.Reactivate;
-using Application.Features.Doctors.Commands.RemoveWeeklyShift;
-using Application.Features.Doctors.Commands.TransformToDepartment;
-using Application.Features.Doctors.Commands.DefineWeeklyShift;
-using MediatR;
-using Microsoft.AspNetCore.Mvc;
 using Application.Features.Doctors.Commands.Register;
-using Application.Features.Doctors.Commands.UpdateSpecialization;
 using Application.Features.Doctors.Commands.RelocateDoctorOffice;
+using Application.Features.Doctors.Commands.TransformToDepartment;
+using Application.Features.Doctors.Commands.UpdateSpecialization;
 using Application.Features.Doctors.Queries.GetAll;
 using Application.Features.Doctors.Queries.GetById;
+using MediatR;
+using Microsoft.AspNetCore.Mvc;
 
 namespace WebApi.Controllers
 {
@@ -47,7 +45,7 @@ namespace WebApi.Controllers
         public async Task<IActionResult> Register(RegisterNewDoctorCommand command)
         {
             var doctorId = await _mediator.Send(command);
-             return Ok(doctorId);
+            return Ok(doctorId);
             //return CreatedAtAction(nameof(GetProfile), new { id = doctorId }, command);
         }
 
@@ -73,23 +71,9 @@ namespace WebApi.Controllers
             return NoContent();
         }
 
-        // --- Schedule Management ---
 
-        [HttpPost("{id}/shifts")]
-        public async Task<IActionResult> AddShift(int id, DefineDoctorWeeklyShiftCommand command)
-        {
-            if (id != command.DoctorId) return BadRequest();
 
-            await _mediator.Send(command);
-            return Ok();
-        }
 
-        [HttpDelete("{id}/shifts/{scheduleId}")]
-        public async Task<IActionResult> RemoveShift(int id, int scheduleId)
-        {
-            await _mediator.Send(new RemoveDoctorWeeklyShiftCommand(id, scheduleId));
-            return NoContent();
-        }
 
         // --- Lifecycle ---
 

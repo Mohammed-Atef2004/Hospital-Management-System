@@ -7,8 +7,11 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="Features\Nurses\Queries\GetAllShifts\**" />
     <Compile Remove="Features\Nurses\Queries\GetShiftById\**" />
+    <EmbeddedResource Remove="Features\Nurses\Queries\GetAllShifts\**" />
     <EmbeddedResource Remove="Features\Nurses\Queries\GetShiftById\**" />
+    <None Remove="Features\Nurses\Queries\GetAllShifts\**" />
     <None Remove="Features\Nurses\Queries\GetShiftById\**" />
   </ItemGroup>
 

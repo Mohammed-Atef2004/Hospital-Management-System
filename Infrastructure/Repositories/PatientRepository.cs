@@ -3,11 +3,6 @@ using Domain.Entities;
 using Domain.Repositories;
 using Infastructure.Presistence.Database;
 using Microsoft.EntityFrameworkCore;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Infastructure.Repositories
 {
@@ -26,7 +21,7 @@ namespace Infastructure.Repositories
             if (existingPatient != null)
             {
                 existingPatient.NurseId = patient.NurseId;
-                existingPatient.Appointments= patient.Appointments;
+                existingPatient.Appointments = patient.Appointments;
                 existingPatient.MedicalRecords = patient.MedicalRecords;
                 existingPatient.Prescriptions = patient.Prescriptions;
                 existingPatient.FirstName = patient.FirstName;
@@ -35,6 +30,13 @@ namespace Infastructure.Repositories
                 _context.SaveChanges();
 
             }
+        }
+
+        public async Task<bool> ExistsAsync(int id, CancellationToken cancellationToken = default)
+        {
+
+            return await _context.Set<Patient>()
+                .AnyAsync(p => p.Id == id && !p.IsDeleted, cancellationToken);
         }
     }
 }

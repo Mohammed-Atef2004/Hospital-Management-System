@@ -3,7 +3,8 @@ using Domain.Doctors;
 using Domain.Entities;
 using Domain.Medicines;
 using Domain.Nurses;
-using Domain.Schedules;
+using Domain.personnel;
+using Domain.Shifts;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
@@ -23,7 +24,7 @@ namespace Infastructure.Presistence.Database
         public DbSet<Pharmacy> Pharmacies { get; set; }
         public DbSet<StockAdjustment> StockAdjustments { get; set; }
         public DbSet<Dispense> Dispenses { get; set; }
-        public DbSet<Schedule> Schedules { get; set; }
+        public DbSet<Shift> Shifts { get; set; }
         public DbSet<Staff> Staff { get; set; }
 
         public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options)

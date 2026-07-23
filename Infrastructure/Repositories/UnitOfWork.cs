@@ -3,6 +3,8 @@ using Domain.Departments;
 using Domain.Doctors;
 using Domain.Medicines;
 using Domain.Nurses;
+using Domain.PatientAssignments;
+using Domain.personnel;
 using Domain.Repositories;
 using Domain.Schedules;
 using Infastructure.Presistence.Database;
@@ -18,7 +20,10 @@ namespace Infastructure.Repositories
         public IDoctorRepository Doctor { get; private set; }
         public IMedicineRepository Medicine { get; private set; }
         public INurseRepository Nurse { get; private set; }
-        public IScheduleRepository Schedule { get; private set; }
+        public IShiftRepository Shift { get; private set; }
+        public IStaffRepository Staff { get; private set; }
+        public IAssignPatientRepository PatientAssignment
+        { get; private set; }
 
         public UnitOfWork(ApplicationDbContext context)
         {
@@ -27,13 +32,11 @@ namespace Infastructure.Repositories
             Department = new DepartmentRepository(_context);
             Doctor = new DoctorRepository(_context);
 
-
-
-
-
             Nurse = new NurseRepository(_context);
-            Schedule = new ScheduleRepository(_context);
+            Shift = new ShiftRepository(_context);
             Medicine = new MedicineRepository(_context);
+            Staff = new StaffRepository(_context);
+            PatientAssignment = new AssignPatientRepository(_context);
         }
 
         public async Task<int> CompleteAsync()

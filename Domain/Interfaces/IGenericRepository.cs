@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Linq.Expressions;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Linq.Expressions;
 
 namespace Domain.Repositories
 {
@@ -21,6 +16,7 @@ namespace Domain.Repositories
         Task AddAsync(T entity);
         void Update(T entity);
         void Remove(T entity);
+        public Task<bool> ExistsAsync(Expression<Func<T, bool>> predicate, CancellationToken cancellationToken = default);
     }
 
 }

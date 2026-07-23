@@ -1,15 +1,10 @@
 ﻿using Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Infastructure.Presistence.Configurations
 {
-    public class PatientConfiguration:IEntityTypeConfiguration<Patient>
+    public class PatientConfiguration : IEntityTypeConfiguration<Patient>
     {
         public void Configure(EntityTypeBuilder<Patient> builder)
         {
@@ -42,12 +37,20 @@ namespace Infastructure.Presistence.Configurations
                 .HasForeignKey(pr => pr.PatientId)
                 .OnDelete(DeleteBehavior.Restrict);
 
-            builder
-                .HasOne(p => p.Nurse)
-                .WithMany(n => n.Patients)
-                .HasForeignKey(p => p.NurseId)
-                .OnDelete(DeleteBehavior.Restrict);
+            builder.HasMany(p => p.VitalSigns)
+           .WithOne()
+           .HasForeignKey(v => v.PatientId)
+           .OnDelete(DeleteBehavior.Cascade);
+
+            builder.HasMany(p => p.VitalSigns)
+              .WithOne()
+              .HasForeignKey(v => v.PatientId)
+               .OnDelete(DeleteBehavior.Cascade);
+
+            var navigation = builder.Metadata.FindNavigation(nameof(Patient.VitalSigns));
+            navigation?.SetPropertyAccessMode(PropertyAccessMode.Field);
+
         }
-    
+
     }
 }

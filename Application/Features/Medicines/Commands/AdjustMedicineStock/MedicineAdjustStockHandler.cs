@@ -1,16 +1,12 @@
 ﻿using Application.Common.Exceptions;
 using Application.Enums;
+using Domain.Medicines;
 using Domain.Repositories;
 using MediatR;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Application.Features.Medicines.Commands.AdjustMedicineStock
 {
-    public class MedicineAdjustStockHandler: IRequestHandler<MedicineAdjustStockCommand, int>
+    public class MedicineAdjustStockHandler : IRequestHandler<MedicineAdjustStockCommand, int>
     {
         private readonly IUnitOfWork _unitOfWork;
 
@@ -19,12 +15,12 @@ namespace Application.Features.Medicines.Commands.AdjustMedicineStock
             _unitOfWork = unitOfWork;
         }
 
-        public async Task<int> Handle(MedicineAdjustStockCommand request,CancellationToken cancellationToken)
+        public async Task<int> Handle(MedicineAdjustStockCommand request, CancellationToken cancellationToken)
         {
             var medicine = await _unitOfWork.Medicine.GetByIdAsync(request.MedicineId);
 
             if (medicine == null)
-                throw new NotFoundException("Medicine not found");
+                throw new NotFoundException(nameof(Medicine), request.MedicineId);
 
             int amount;
             if (request.Operation == StockOperation.Increase)
@@ -32,7 +28,7 @@ namespace Application.Features.Medicines.Commands.AdjustMedicineStock
             else
                 amount = -request.Quantity;
 
-            medicine.AdjustStock(amount,request.Reason,request.PharmacistId);
+            medicine.AdjustStock(amount, request.Reason, request.PharmacistId);
 
             await _unitOfWork.CompleteAsync();
             return medicine.Stock;

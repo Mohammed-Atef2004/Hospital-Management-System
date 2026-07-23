@@ -1,11 +1,7 @@
 ﻿using Application.Common.Exceptions;
+using Domain.Doctors;
 using Domain.Repositories;
 using MediatR;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Application.Features.Doctors.Commands.UpdateSpecialization
 {
@@ -21,7 +17,7 @@ namespace Application.Features.Doctors.Commands.UpdateSpecialization
             var doctor = await _unitOfWork.Doctor.GetByIdAsync(request.DoctorId);
             if (doctor == null)
             {
-                throw new NotFoundException("Doctor not found");
+                throw new NotFoundException(nameof(Doctor), request.DoctorId);
             }
             doctor.UpdateSpecialization(request.NewSpecialization);
             _unitOfWork.Doctor.Update(doctor);

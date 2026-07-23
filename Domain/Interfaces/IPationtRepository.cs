@@ -1,14 +1,10 @@
 ﻿using Domain.Entities;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Domain.Repositories
 {
     public interface IPatientRepository : IGenericRepository<Patient>
     {
         public void Update(Patient patient);
+        public Task<bool> ExistsAsync(int id, CancellationToken cancellationToken = default);
     }
 }

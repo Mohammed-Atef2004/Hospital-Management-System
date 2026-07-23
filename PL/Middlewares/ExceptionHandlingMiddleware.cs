@@ -1,0 +1,62 @@
+﻿using Application.Common.Exceptions;
+using Domain.SharedKernel;
+
+namespace API.Middlewares
+{
+    public class ExceptionHandlingMiddleware
+    {
+        private readonly RequestDelegate _next;
+        private readonly ILogger<ExceptionHandlingMiddleware> _logger;
+        private readonly IHostEnvironment _env;
+
+        public ExceptionHandlingMiddleware(
+            RequestDelegate next,
+            ILogger<ExceptionHandlingMiddleware> logger,
+            IHostEnvironment env)
+        {
+            _next = next;
+            _logger = logger;
+            _env = env;
+        }
+
+        public async Task InvokeAsync(HttpContext context)
+        {
+            try
+            {
+                await _next(context);
+            }
+            catch (Exception ex)
+            {
+                await HandleExceptionAsync(context, ex);
+            }
+        }
+
+        private async Task HandleExceptionAsync(HttpContext context, Exception exception)
+        {
+            _logger.LogError(exception, "Unhandled exception occurred.");
+
+            var (statusCode, message) = exception switch
+            {
+                NotFoundException => (StatusCodes.Status404NotFound, exception.Message),
+                ForbiddenAccessException => (StatusCodes.Status403Forbidden, exception.Message),
+                UnauthorizedAccessException => (StatusCodes.Status401Unauthorized, "Unauthorized."),
+                BadRequestException => (StatusCodes.Status400BadRequest, exception.Message),
+                DomainException => (StatusCodes.Status400BadRequest, exception.Message),
+                _ => (StatusCodes.Status500InternalServerError, "An unexpected error occurred.")
+            };
+
+            context.Response.ContentType = "application/json";
+            context.Response.StatusCode = statusCode;
+
+            var response = new
+            {
+                statusCode,
+                message,
+
+                details = _env.IsDevelopment() ? exception.StackTrace : null
+            };
+
+            await context.Response.WriteAsJsonAsync(response);
+        }
+    }
+}

@@ -23,10 +23,10 @@
     <Folder Include="Nurses\Events\" />
     <Folder Include="Nurses\Rules\" />
     <Folder Include="Nurses\ValueObjects\" />
-    <Folder Include="Schedules\Enums\" />
-    <Folder Include="Schedules\Events\" />
-    <Folder Include="Schedules\Rules\" />
-    <Folder Include="Schedules\ValueObjects\" />
+    <Folder Include="Shifts\Enums\" />
+    <Folder Include="Shifts\Events\" />
+    <Folder Include="Shifts\Rules\" />
+    <Folder Include="Shifts\ValueObjects\" />
   </ItemGroup>
 
   <ItemGroup>

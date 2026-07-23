@@ -16,7 +16,7 @@ namespace Application.Features.Nurses.Commands.AddNurse
 
         public async Task<int> Handle(AddNurseCommand request, CancellationToken cancellationToken)
         {
-            var nurse = Nurse.Register(request.FirstName, request.LastName, request.Address, request.City, request.PhoneNumber);
+            var nurse = Nurse.Register(request.FirstName, request.LastName, request.Address, request.City, request.PhoneNumber, request.isHead);
 
             await _unitOfWork.Nurse.AddAsync(nurse);
             await _unitOfWork.CompleteAsync();

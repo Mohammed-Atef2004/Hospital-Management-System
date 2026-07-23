@@ -1,13 +1,9 @@
 ﻿using Application.Common.Exceptions;
 using Application.Features.Departments.DTOs;
 using AutoMapper;
+using Domain.Departments;
 using Domain.Repositories;
 using MediatR;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Application.Features.Departments.Queries.GetById
 {
@@ -25,7 +21,7 @@ namespace Application.Features.Departments.Queries.GetById
         public async Task<DepartmentDto> Handle(GetDepartmentByIdQuery request, CancellationToken ct)
         {
             var dept = await _unitOfWork.Department.GetByIdAsync(request.Id)
-                ?? throw new NotFoundException("Department is not found");
+                ?? throw new NotFoundException(nameof(Department), request.Id);
 
             return _mapper.Map<DepartmentDto>(dept);
         }

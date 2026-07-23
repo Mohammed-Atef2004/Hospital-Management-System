@@ -1,4 +1,4 @@
-﻿using Domain.Entities;
+﻿using Domain.personnel;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
@@ -10,12 +10,12 @@ namespace Infrastructure.Presistence.Configurations
         {
             builder.HasKey(s => s.Id);
 
-            builder.HasMany(s => s.Schedules)
-               .WithOne(s => s.Staff)
-               .HasForeignKey(s => s.StaffId)
-               .OnDelete(DeleteBehavior.Cascade);
+            //builder.HasMany(s => s.Schedules)
+            //   .WithOne(s => Staff)
+            //   .HasForeignKey(s => s.StaffId)
+            //   .OnDelete(DeleteBehavior.Cascade);
 
-            builder.Navigation(s => s.Schedules)
+            builder.Navigation(s => s.Shifts)
                    .UsePropertyAccessMode(PropertyAccessMode.Field);
         }
     }
