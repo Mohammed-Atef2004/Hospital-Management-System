@@ -1,77 +1,319 @@
-﻿using Domain.Doctors.Exceptions;
-using Domain.Entities;
-using FluentAssertions;
+﻿using Domain.Entities;
 
-namespace Domain.Tests.Doctor
+namespace Domain.Tests.Entities;
+
+public class AppointmentTests
 {
-    public class DoctorAppointmentTests
+    private static DateTime FutureDate =>
+        DateTime.UtcNow.AddDays(1);
+
+    private static Appointment CreateValidAppointment(
+        DateTime? appointmentDate = null,
+        string? description = null,
+        int? patientId = 1,
+        int? doctorId = 1)
     {
-        [Fact]
-        public void BookAppointment_WhenDoctorNotAvailable_ShouldThrowDoctorNotAvailableException()
-        {
-            // Arrange
-            var doctor = Doctors.Doctor.Create("Ahmed", "Ali", "Addr", "City", "Spec");
-            var appointmentDate = DateTime.UtcNow.AddDays(7);
-
-            var appointment = new Appointment
-            {
-                AppointmentDate = appointmentDate,
-                Description = "Checkup"
-            };
-
-            // Act
-            Action act = () => doctor.BookAppointment(appointment, DateTime.UtcNow);
-
-            // Assert
-            act.Should().Throw<DoctorNotAvailableException>();
-        }
-
-        [Fact]
-        public void BookAppointment_InPast_ShouldThrowInvalidOperationException()
-        {
-            // Arrange
-            var doctor = Doctors.Doctor.Create("Ahmed", "Ali", "Addr", "City", "Spec");
-            var pastDate = DateTime.UtcNow.AddDays(-1);
-
-            var appointment = new Appointment
-            {
-                AppointmentDate = pastDate,
-                Description = "Past Appointment"
-            };
-
-            // Act
-            Action act = () => doctor.BookAppointment(appointment, DateTime.UtcNow);
-
-            // Assert
-            act.Should().Throw<InvalidOperationException>()
-               .WithMessage("Cannot book an appointment in the past.");
-        }
-
-        [Fact]
-        public void BookAppointment_WhenConflictExists_ShouldThrowDoctorNotAvailableException()
-        {
-            //// Arrange
-            //var doctor = Entities.Doctor.Create("Ahmed", "Ali", "Addr", "City", "Spec");
-            //var appointmentDate = new DateTime(2026, 5, 20, 10, 0, 0); // الأربعاء مثلاً
-
-            //var schedule = new Schedule
-            //{
-            //    DayofWeek = appointmentDate.DayOfWeek,
-            //    StartTime = new TimeSpan(8, 0, 0),
-            //    EndTime = new TimeSpan(16, 0, 0)
-            //};
-            //doctor.AddSchedule(schedule);
-
-            //var firstAppointment = new Appointment { AppointmentDate = appointmentDate };
-            //doctor.BookAppointment(firstAppointment, DateTime.UtcNow);
-
-            //var secondAppointment = new Appointment { AppointmentDate = appointmentDate };
-
-            //// Act
-            //Action act = () => doctor.BookAppointment(secondAppointment, DateTime.UtcNow);
-
-            //// Assert
-            //act.Should().Throw<DoctorNotAvailableException>();
-        }
+        return Appointment.Create(
+            appointmentDate ?? FutureDate,
+            description ?? "Regular medical check-up",
+            patientId,
+            doctorId);
     }
+
+    #region Create
+
+    [Fact]
+    public void Create_WithValidData_ShouldCreateAppointment()
+    {
+        // Arrange
+        var appointmentDate = FutureDate;
+        const string description = "Regular medical check-up";
+        const int patientId = 1;
+        const int doctorId = 1;
+
+        // Act
+        var appointment = Appointment.Create(
+            appointmentDate,
+            description,
+            patientId,
+            doctorId);
+
+        // Assert
+        Assert.NotNull(appointment);
+        Assert.Equal(appointmentDate, appointment.AppointmentDate);
+        Assert.Equal(description, appointment.Description);
+        Assert.Equal(patientId, appointment.PatientId);
+        Assert.Equal(doctorId, appointment.DoctorId);
+        Assert.False(appointment.IsCancelled);
+    }
+
+    [Fact]
+    public void Create_WithNullPatient_ShouldCreateAppointment()
+    {
+        // Act
+        var appointment = Appointment.Create(
+            FutureDate,
+            "Regular medical check-up",
+            null,
+            1);
+
+        // Assert
+        Assert.Null(appointment.PatientId);
+    }
+
+    [Fact]
+    public void Create_WithNullDoctor_ShouldCreateAppointment()
+    {
+        // Act
+        var appointment = Appointment.Create(
+            FutureDate,
+            "Regular medical check-up",
+            1,
+            null);
+
+        // Assert
+        Assert.Null(appointment.DoctorId);
+    }
+
+    [Fact]
+    public void Create_WithPastDate_ShouldThrowArgumentException()
+    {
+        // Arrange
+        var pastDate = DateTime.UtcNow.AddMinutes(-1);
+
+        // Act & Assert
+        Assert.Throws<ArgumentException>(() =>
+            Appointment.Create(
+                pastDate,
+                "Regular medical check-up",
+                1,
+                1));
+    }
+
+    [Theory]
+    [InlineData("")]
+    [InlineData(" ")]
+    [InlineData("   ")]
+    public void Create_WithInvalidDescription_ShouldThrowArgumentException(
+        string description)
+    {
+        // Act & Assert
+        Assert.Throws<ArgumentException>(() =>
+            Appointment.Create(
+                FutureDate,
+                description,
+                1,
+                1));
+    }
+
+    #endregion
+
+    #region Cancel
+
+    [Fact]
+    public void Cancel_WhenAppointmentIsActive_ShouldCancelAppointment()
+    {
+        // Arrange
+        var appointment = CreateValidAppointment();
+
+        // Act
+        appointment.Cancel();
+
+        // Assert
+        Assert.True(appointment.IsCancelled);
+    }
+
+    [Fact]
+    public void Cancel_WhenAppointmentIsAlreadyCancelled_ShouldThrowInvalidOperationException()
+    {
+        // Arrange
+        var appointment = CreateValidAppointment();
+
+        appointment.Cancel();
+
+        // Act & Assert
+        Assert.Throws<InvalidOperationException>(
+            () => appointment.Cancel());
+    }
+
+    #endregion
+
+    #region ChangeDescription
+
+    [Fact]
+    public void ChangeDescription_WithValidDescription_ShouldUpdateDescription()
+    {
+        // Arrange
+        var appointment = CreateValidAppointment();
+
+        // Act
+        appointment.ChangeDescription("Follow-up appointment");
+
+        // Assert
+        Assert.Equal(
+            "Follow-up appointment",
+            appointment.Description);
+    }
+
+    [Theory]
+    [InlineData("")]
+    [InlineData(" ")]
+    [InlineData("   ")]
+    public void ChangeDescription_WithInvalidDescription_ShouldThrowArgumentException(
+        string description)
+    {
+        // Arrange
+        var appointment = CreateValidAppointment();
+
+        // Act & Assert
+        Assert.Throws<ArgumentException>(
+            () => appointment.ChangeDescription(description));
+    }
+
+    [Fact]
+    public void ChangeDescription_WhenAppointmentIsCancelled_ShouldThrowInvalidOperationException()
+    {
+        // Arrange
+        var appointment = CreateValidAppointment();
+
+        appointment.Cancel();
+
+        // Act & Assert
+        Assert.Throws<InvalidOperationException>(
+            () => appointment.ChangeDescription("New description"));
+    }
+
+    #endregion
+
+    #region ChangeDoctor
+
+    [Fact]
+    public void ChangeDoctor_WithValidDoctorId_ShouldUpdateDoctor()
+    {
+        // Arrange
+        var appointment = CreateValidAppointment();
+
+        // Act
+        appointment.ChangeDoctor(2);
+
+        // Assert
+        Assert.Equal(2, appointment.DoctorId);
+    }
+
+    [Theory]
+    [InlineData(0)]
+    [InlineData(-1)]
+    public void ChangeDoctor_WithInvalidDoctorId_ShouldThrowArgumentOutOfRangeException(
+        int doctorId)
+    {
+        // Arrange
+        var appointment = CreateValidAppointment();
+
+        // Act & Assert
+        Assert.Throws<ArgumentOutOfRangeException>(
+            () => appointment.ChangeDoctor(doctorId));
+    }
+
+    [Fact]
+    public void ChangeDoctor_WhenAppointmentIsCancelled_ShouldThrowInvalidOperationException()
+    {
+        // Arrange
+        var appointment = CreateValidAppointment();
+
+        appointment.Cancel();
+
+        // Act & Assert
+        Assert.Throws<InvalidOperationException>(
+            () => appointment.ChangeDoctor(2));
+    }
+
+    #endregion
+
+    #region ChangePatient
+
+    [Fact]
+    public void ChangePatient_WithValidPatientId_ShouldUpdatePatient()
+    {
+        // Arrange
+        var appointment = CreateValidAppointment();
+
+        // Act
+        appointment.ChangePatient(2);
+
+        // Assert
+        Assert.Equal(2, appointment.PatientId);
+    }
+
+    [Theory]
+    [InlineData(0)]
+    [InlineData(-1)]
+    public void ChangePatient_WithInvalidPatientId_ShouldThrowArgumentOutOfRangeException(
+        int patientId)
+    {
+        // Arrange
+        var appointment = CreateValidAppointment();
+
+        // Act & Assert
+        Assert.Throws<ArgumentOutOfRangeException>(
+            () => appointment.ChangePatient(patientId));
+    }
+
+    [Fact]
+    public void ChangePatient_WhenAppointmentIsCancelled_ShouldThrowInvalidOperationException()
+    {
+        // Arrange
+        var appointment = CreateValidAppointment();
+
+        appointment.Cancel();
+
+        // Act & Assert
+        Assert.Throws<InvalidOperationException>(
+            () => appointment.ChangePatient(2));
+    }
+
+    #endregion
+
+    #region ChangeAppointmentDate
+
+    [Fact]
+    public void ChangeAppointmentDate_WithValidFutureDate_ShouldUpdateDate()
+    {
+        // Arrange
+        var appointment = CreateValidAppointment();
+        var newDate = DateTime.UtcNow.AddDays(2);
+
+        // Act
+        appointment.ChangeAppointmentDate(newDate);
+
+        // Assert
+        Assert.Equal(newDate, appointment.AppointmentDate);
+    }
+
+    [Fact]
+    public void ChangeAppointmentDate_WithPastDate_ShouldThrowArgumentException()
+    {
+        // Arrange
+        var appointment = CreateValidAppointment();
+        var pastDate = DateTime.UtcNow.AddMinutes(-1);
+
+        // Act & Assert
+        Assert.Throws<ArgumentException>(
+            () => appointment.ChangeAppointmentDate(pastDate));
+    }
+
+    [Fact]
+    public void ChangeAppointmentDate_WhenAppointmentIsCancelled_ShouldThrowInvalidOperationException()
+    {
+        // Arrange
+        var appointment = CreateValidAppointment();
+
+        appointment.Cancel();
+
+        // Act & Assert
+        Assert.Throws<InvalidOperationException>(
+            () => appointment.ChangeAppointmentDate(
+                DateTime.UtcNow.AddDays(2)));
+    }
+
+    #endregion
 }

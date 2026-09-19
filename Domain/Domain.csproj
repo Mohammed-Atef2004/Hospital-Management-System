@@ -7,6 +7,11 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Folder Include="Appointments\Enums\" />
+    <Folder Include="Appointments\Events\" />
+    <Folder Include="Appointments\Exceptions\" />
+    <Folder Include="Appointments\ValueObjects\" />
+    <Folder Include="Appointments\Rules\" />
     <Folder Include="Departments\Enums\" />
     <Folder Include="Departments\Events\" />
     <Folder Include="Departments\ValueObjects\" />
