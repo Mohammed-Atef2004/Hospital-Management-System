@@ -2,6 +2,7 @@ using API.Middlewares;
 using Application;
 using Domain.Departments;
 using Domain.Doctors;
+using Domain.Interfaces;
 using Domain.Interfaces.Services;
 using Domain.Medicines;
 using Domain.Nurses;
@@ -43,6 +44,7 @@ namespace Presentation
             builder.Services.AddScoped<INurseRepository, NurseRepository>();
             builder.Services.AddScoped<ICurrentUserService, CurrentUserService>();
             builder.Services.AddScoped<IShiftRepository, ShiftRepository>();
+            builder.Services.AddScoped<IAppointmentRepository, AppointmentRepository>();
 
             // ================== MediatR ==================
             builder.Services.AddMediatR(typeof(ApplicationAssembly));
