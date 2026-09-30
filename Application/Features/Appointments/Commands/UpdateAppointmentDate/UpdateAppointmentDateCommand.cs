@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace Application.Features.Appointments.Commands.UpdateAppointmentDate
 {
-    public record UpdatePatientCommand(
+    public record UpdateAppointmentDateCommand(
         int Id,
         DateTime AppointmentDate):IRequest;
 }

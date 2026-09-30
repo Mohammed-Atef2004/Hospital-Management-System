@@ -9,18 +9,18 @@ using System.Threading.Tasks;
 
 namespace Application.Features.Appointments.Commands.UpdateAppointmentDate
 {
-    public class UpdateDoctorCommandHandler : IRequestHandler<UpdatePatientCommand>
+    public class UpdateAppointmentDateCommandHandler : IRequestHandler<UpdateAppointmentDateCommand>
     {
         private readonly IAppointmentRepository _appointmentsRepository;
         private readonly IUnitOfWork _unitOfWork;
 
-        public UpdateDoctorCommandHandler(IAppointmentRepository appointmentsRepository, IUnitOfWork unitOfWork)
+        public UpdateAppointmentDateCommandHandler(IAppointmentRepository appointmentsRepository, IUnitOfWork unitOfWork)
         {
             _appointmentsRepository = appointmentsRepository;
             _unitOfWork = unitOfWork;
         }
 
-        public async Task<Unit> Handle(UpdatePatientCommand request, CancellationToken cancellationToken)
+        public async Task<Unit> Handle(UpdateAppointmentDateCommand request, CancellationToken cancellationToken)
         {
             var appointment = _appointmentsRepository.GetFirstOrDefaultAsync(x => x.Id == request.Id).Result;
             if (appointment == null)
