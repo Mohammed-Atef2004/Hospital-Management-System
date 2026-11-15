@@ -6,6 +6,7 @@ using Domain.Departments.Exceptions;
 using Domain.Departments.Events;
 using Domain.Departments.ValueObjects;
 using Domain.SharedKernel;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Domain.Departments
 {
@@ -19,6 +20,7 @@ namespace Domain.Departments
         public virtual ICollection<Doctor> Doctors { get; private set; } = new List<Doctor>();
         public virtual ICollection<Nurse> Nurses { get; private set; } = new List<Nurse>();
         private readonly List<DomainEvent> _domainEvents = new();
+        [NotMapped]
         public IReadOnlyCollection<DomainEvent> DomainEvents => _domainEvents.AsReadOnly();
 
         private Department() { } // EF Core

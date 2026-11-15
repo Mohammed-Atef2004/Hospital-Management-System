@@ -5,6 +5,7 @@ using Domain.personnel;
 using Domain.SharedKernel;
 using Domain.Doctors.Events;
 using Domain.Doctors.ValueObjects;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Domain.Doctors
 {
@@ -19,6 +20,7 @@ namespace Domain.Doctors
         public string Specialization { get; private set; }
 
         private readonly List<DomainEvent> _domainEvents = new();
+        [NotMapped]
         public IReadOnlyCollection<DomainEvent> DomainEvents => _domainEvents.AsReadOnly();
 
 
