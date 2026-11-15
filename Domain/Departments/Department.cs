@@ -3,42 +3,45 @@ using Domain.Entities;
 using Domain.Departments;
 using Domain.Nurses;
 using Domain.Departments.Exceptions;
+using Domain.Departments.Events;
+using Domain.Departments.ValueObjects;
+using Domain.SharedKernel;
 
 namespace Domain.Departments
 {
-    public class Department : CommonData
+    public class Department : CommonData, IAggregateRoot
     {
         public int Id { get; private set; }
         public string Name { get; private set; } = default!;
         public string Description { get; private set; } = default!;
         public bool IsActive { get; private set; } = true;
 
-        public virtual ICollection<Doctor>? Doctors { get; private set; }
-        public virtual ICollection<Nurse>? Nurses { get; private set; }
+        public virtual ICollection<Doctor> Doctors { get; private set; } = new List<Doctor>();
+        public virtual ICollection<Nurse> Nurses { get; private set; } = new List<Nurse>();
+        private readonly List<DomainEvent> _domainEvents = new();
+        public IReadOnlyCollection<DomainEvent> DomainEvents => _domainEvents.AsReadOnly();
 
         private Department() { } // EF Core
 
         // Factory Method (Task-Based API friendly)
         public static Department Register(string name, string description)
         {
-            if (string.IsNullOrWhiteSpace(name))
-                throw new DepartmentInvalidNameException();
-
-            return new Department
+            var department = new Department
             {
-                Name = name.Trim(),
-                Description = description?.Trim() ?? string.Empty
+                Name = DepartmentName.Create(name).Value,
+                Description = DepartmentDescription.Create(description).Value
             };
+            department.AddDomainEvent(new DepartmentRegisteredDomainEvent(department.Name));
+            return department;
         }
 
         public void UpdateInfo(string name, string description)
         {
-            if (string.IsNullOrWhiteSpace(name))
-                throw new DepartmentInvalidNameException();
-
-            Name = name.Trim();
-            Description = description?.Trim() ?? string.Empty;
+            var previousName = Name;
+            Name = DepartmentName.Create(name).Value;
+            Description = DepartmentDescription.Create(description).Value;
             UpdatedAt = DateTime.UtcNow;
+            AddDomainEvent(new DepartmentInformationUpdatedDomainEvent(Id, previousName, Name));
         }
 
         public void Deactivate()
@@ -48,6 +51,7 @@ namespace Domain.Departments
 
             IsActive = false;
             UpdatedAt = DateTime.UtcNow;
+            AddDomainEvent(new DepartmentDeactivatedDomainEvent(Id));
         }
 
 
@@ -57,20 +61,23 @@ namespace Domain.Departments
                 throw new DepartmentAlreadyActiveException(Id);
             IsActive = true;
             UpdatedAt = DateTime.UtcNow;
+            AddDomainEvent(new DepartmentActivatedDomainEvent(Id));
         }
         public void Rename(string newName)
         {
-            if (string.IsNullOrWhiteSpace(newName))
-                throw new DepartmentInvalidNameException();
-            Name = newName.Trim();
+            var previousName = Name;
+            Name = DepartmentName.Create(newName).Value;
             UpdatedAt = DateTime.UtcNow;
+            AddDomainEvent(new DepartmentRenamedDomainEvent(Id, previousName, Name));
         }
         public void ChangeDescription(string newDescription)
         {
-            if (string.IsNullOrWhiteSpace(newDescription))
-                 throw new DepartmentInvalidDescriptionException();
-            Description = newDescription?.Trim() ?? string.Empty;
+            Description = DepartmentDescription.Create(newDescription).Value;
             UpdatedAt = DateTime.UtcNow;
+            AddDomainEvent(new DepartmentDescriptionChangedDomainEvent(Id, Description));
         }
+
+        private void AddDomainEvent(DomainEvent domainEvent) => _domainEvents.Add(domainEvent);
+        public void ClearDomainEvents() => _domainEvents.Clear();
     }
 }

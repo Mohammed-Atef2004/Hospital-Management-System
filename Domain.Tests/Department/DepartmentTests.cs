@@ -24,6 +24,8 @@ namespace Domain.Tests.Departments
             dept.Name.Should().Be(name);
             dept.Description.Should().Be(desc);
             dept.IsActive.Should().BeTrue();
+            dept.DomainEvents.Should().ContainSingle()
+                .Which.Should().BeOfType<Domain.Departments.Events.DepartmentRegisteredDomainEvent>();
         }
 
         [Fact]
@@ -111,6 +113,20 @@ namespace Domain.Tests.Departments
             var act = () => dept.Activate();
 
             act.Should().Throw<DepartmentAlreadyActiveException>();
+        }
+
+        [Fact]
+        public void UpdateInfo_ShouldRaiseEventAndTrimFields()
+        {
+            var dept = Department.Register("ICU", "Critical care");
+            dept.ClearDomainEvents();
+
+            dept.UpdateInfo("  Cardiology  ", "  Heart care  ");
+
+            dept.Name.Should().Be("Cardiology");
+            dept.Description.Should().Be("Heart care");
+            dept.DomainEvents.Should().ContainSingle()
+                .Which.Should().BeOfType<Domain.Departments.Events.DepartmentInformationUpdatedDomainEvent>();
         }
 
     }
