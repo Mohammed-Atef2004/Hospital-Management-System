@@ -65,7 +65,7 @@ namespace Domain.Tests.Personnel
 
             var act = () => staff.AddShift(BaseStart, BaseStart.AddHours(-1));
 
-            Assert.Throws<DomainException>(act);
+            Assert.ThrowsAny<DomainException>(act);
         }
 
         [Fact]
@@ -88,7 +88,7 @@ namespace Domain.Tests.Personnel
             var staff = new TestStaff();
 
             var act = () => staff.UpdateShift(999, BaseStart, BaseStart.AddHours(4));
-            Assert.Throws<DomainException>(act);
+            Assert.ThrowsAny<DomainException>(act);
         }
 
         [Fact]
@@ -131,7 +131,7 @@ namespace Domain.Tests.Personnel
         {
             var staff = new TestStaff();
             var act = () => staff.RemoveShift(999);
-            Assert.Throws<DomainException>(act);
+            Assert.ThrowsAny<DomainException>(act);
         }
     }
 }

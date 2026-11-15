@@ -41,7 +41,7 @@ namespace Domain.personnel
                 throw new ShiftNotFoundException();
 
             var hasConflict = _shifts.Any(s =>
-                s.Id != shiftId &&
+                !ReferenceEquals(s, shift) &&
                 !s.IsDeleted &&
                 s.OverlapsWith(start, end));
 
