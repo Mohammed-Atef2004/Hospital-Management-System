@@ -10,8 +10,8 @@ public class AppointmentTests
     private static Appointment CreateValidAppointment(
         DateTime? appointmentDate = null,
         string? description = null,
-        int? patientId = 1,
-        int? doctorId = 1)
+        int patientId = 1,
+        int doctorId = 1)
     {
         return Appointment.Create(
             appointmentDate ?? FutureDate,
@@ -47,32 +47,15 @@ public class AppointmentTests
         Assert.False(appointment.IsCancelled);
     }
 
-    [Fact]
-    public void Create_WithNullPatient_ShouldCreateAppointment()
+    [Theory]
+    [InlineData(0, 1)]
+    [InlineData(-1, 1)]
+    [InlineData(1, 0)]
+    [InlineData(1, -1)]
+    public void Create_WithInvalidForeignKeys_ShouldThrowArgumentOutOfRangeException(int patientId, int doctorId)
     {
-        // Act
-        var appointment = Appointment.Create(
-            FutureDate,
-            "Regular medical check-up",
-            null,
-            1);
-
-        // Assert
-        Assert.Null(appointment.PatientId);
-    }
-
-    [Fact]
-    public void Create_WithNullDoctor_ShouldCreateAppointment()
-    {
-        // Act
-        var appointment = Appointment.Create(
-            FutureDate,
-            "Regular medical check-up",
-            1,
-            null);
-
-        // Assert
-        Assert.Null(appointment.DoctorId);
+        Assert.Throws<ArgumentOutOfRangeException>(() => Appointment.Create(
+            FutureDate, "Regular medical check-up", patientId, doctorId));
     }
 
     [Fact]
