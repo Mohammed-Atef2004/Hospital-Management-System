@@ -2,7 +2,12 @@
 
 namespace Domain.Entities;
 
-public class Appointment : CommonData
+using Domain.Appointments.Events;
+using Domain.Appointments.ValueObjects;
+using Domain.SharedKernel;
+using System.ComponentModel.DataAnnotations.Schema;
+
+public class Appointment : CommonData, IAggregateRoot
 {
     public int Id { get; private set; }
 
@@ -18,6 +23,10 @@ public class Appointment : CommonData
     public int DoctorId { get; private set; }
     public Doctor Doctor { get; private set; }
 
+    private readonly List<DomainEvent> _domainEvents = new();
+    [NotMapped]
+    public IReadOnlyCollection<DomainEvent> DomainEvents => _domainEvents.AsReadOnly();
+
     private Appointment()
     {
     }
@@ -28,15 +37,10 @@ public class Appointment : CommonData
         int patientId,
         int doctorId)
     {
-        ValidateAppointmentDate(appointmentDate);
-        ValidateDescription(description);
-        ValidateId(patientId, nameof(patientId));
-        ValidateId(doctorId, nameof(doctorId));
-
-        AppointmentDate = appointmentDate;
-        Description = description;
-        PatientId = patientId;
-        DoctorId = doctorId;
+        AppointmentDate = AppointmentSchedule.Create(appointmentDate).Value;
+        Description = AppointmentDescription.Create(description).Value;
+        PatientId = AppointmentParticipantId.Create(patientId, nameof(patientId)).Value;
+        DoctorId = AppointmentParticipantId.Create(doctorId, nameof(doctorId)).Value;
         IsCancelled = false;
     }
 
@@ -46,11 +50,13 @@ public class Appointment : CommonData
         int patientId,
         int doctorId)
     {
-        return new Appointment(
+        var appointment = new Appointment(
             appointmentDate,
             description,
             patientId,
             doctorId);
+        appointment.AddDomainEvent(new AppointmentBookedDomainEvent(appointment.PatientId, appointment.DoctorId, appointment.AppointmentDate));
+        return appointment;
     }
 
     public void Cancel()
@@ -58,38 +64,46 @@ public class Appointment : CommonData
         EnsureNotCancelled();
 
         IsCancelled = true;
+        UpdatedAt = DateTime.UtcNow;
+        AddDomainEvent(new AppointmentCancelledDomainEvent(Id, PatientId, DoctorId, AppointmentDate));
     }
 
     public void ChangeDescription(string description)
     {
         EnsureNotCancelled();
-        ValidateDescription(description);
-
-        Description = description;
+        var previousDescription = Description;
+        Description = AppointmentDescription.Create(description).Value;
+        UpdatedAt = DateTime.UtcNow;
+        AddDomainEvent(new AppointmentDescriptionChangedDomainEvent(Id, previousDescription, Description));
     }
 
     public void ChangeDoctor(int doctorId)
     {
         EnsureNotCancelled();
-        ValidateId(doctorId, nameof(doctorId));
-
+        var previousDoctorId = DoctorId;
+        doctorId = AppointmentParticipantId.Create(doctorId, nameof(doctorId)).Value;
         DoctorId = doctorId;
+        UpdatedAt = DateTime.UtcNow;
+        AddDomainEvent(new AppointmentDoctorChangedDomainEvent(Id, previousDoctorId, DoctorId));
     }
 
     public void ChangePatient(int patientId)
     {
         EnsureNotCancelled();
-        ValidateId(patientId, nameof(patientId));
-
+        var previousPatientId = PatientId;
+        patientId = AppointmentParticipantId.Create(patientId, nameof(patientId)).Value;
         PatientId = patientId;
+        UpdatedAt = DateTime.UtcNow;
+        AddDomainEvent(new AppointmentPatientChangedDomainEvent(Id, previousPatientId, PatientId));
     }
 
     public void ChangeAppointmentDate(DateTime appointmentDate)
     {
         EnsureNotCancelled();
-        ValidateAppointmentDate(appointmentDate);
-
-        AppointmentDate = appointmentDate;
+        var previousDate = AppointmentDate;
+        AppointmentDate = AppointmentSchedule.Create(appointmentDate).Value;
+        UpdatedAt = DateTime.UtcNow;
+        AddDomainEvent(new AppointmentRescheduledDomainEvent(Id, previousDate, AppointmentDate));
     }
 
     private void EnsureNotCancelled()
@@ -101,33 +115,6 @@ public class Appointment : CommonData
         }
     }
 
-    private static void ValidateAppointmentDate(DateTime appointmentDate)
-    {
-        if (appointmentDate <= DateTime.UtcNow)
-        {
-            throw new ArgumentException(
-                "Appointment date must be in the future.",
-                nameof(appointmentDate));
-        }
-    }
-
-    private static void ValidateDescription(string description)
-    {
-        if (string.IsNullOrWhiteSpace(description))
-        {
-            throw new ArgumentException(
-                "Appointment description cannot be empty.",
-                nameof(description));
-        }
-    }
-
-    private static void ValidateId(int id, string parameterName)
-    {
-        if (id <= 0)
-        {
-            throw new ArgumentOutOfRangeException(
-                parameterName,
-                "ID must be greater than zero.");
-        }
-    }
+    private void AddDomainEvent(DomainEvent domainEvent) => _domainEvents.Add(domainEvent);
+    public void ClearDomainEvents() => _domainEvents.Clear();
 }

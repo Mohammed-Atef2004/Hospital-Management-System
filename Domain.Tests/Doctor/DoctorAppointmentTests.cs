@@ -45,6 +45,20 @@ public class AppointmentTests
         Assert.Equal(patientId, appointment.PatientId);
         Assert.Equal(doctorId, appointment.DoctorId);
         Assert.False(appointment.IsCancelled);
+        Assert.Contains(appointment.DomainEvents, domainEvent => domainEvent is Domain.Appointments.Events.AppointmentBookedDomainEvent);
+    }
+
+    [Fact]
+    public void Cancel_ShouldRaiseDomainEventAndPreventFurtherChanges()
+    {
+        var appointment = CreateValidAppointment();
+        appointment.ClearDomainEvents();
+
+        appointment.Cancel();
+
+        Assert.Contains(appointment.DomainEvents,
+            domainEvent => domainEvent is Domain.Appointments.Events.AppointmentCancelledDomainEvent);
+        Assert.Throws<InvalidOperationException>(() => appointment.ChangeAppointmentDate(FutureDate.AddDays(1)));
     }
 
     [Theory]
