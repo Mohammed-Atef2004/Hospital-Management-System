@@ -65,7 +65,7 @@ namespace API.Controllers
         }
 
 
-        [HttpPut("/update")]
+        [HttpPut("update")]
         public async Task<IActionResult> UpdateNurse([FromBody] UpdateNurseCommand command)
         {
             await _mediator.Send(command);
