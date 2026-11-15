@@ -41,6 +41,8 @@ namespace API.Middlewares
                 ForbiddenAccessException => (StatusCodes.Status403Forbidden, exception.Message),
                 UnauthorizedAccessException => (StatusCodes.Status401Unauthorized, "Unauthorized."),
                 BadRequestException => (StatusCodes.Status400BadRequest, exception.Message),
+                FluentValidation.ValidationException validationException =>
+                    (StatusCodes.Status400BadRequest, string.Join(" ", validationException.Errors.Select(error => error.ErrorMessage))),
                 DomainException => (StatusCodes.Status400BadRequest, exception.Message),
                 _ => (StatusCodes.Status500InternalServerError, "An unexpected error occurred.")
             };

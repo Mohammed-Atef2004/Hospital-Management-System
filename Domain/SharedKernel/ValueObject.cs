@@ -1,51 +1,21 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+namespace Domain.Common;
 
-namespace Domain.Common
+public abstract class ValueObject : IEquatable<ValueObject>
 {
-    using System.Collections.Generic;
+    protected abstract IEnumerable<object?> GetEqualityComponents();
 
-    namespace Domain.Common
+    public bool Equals(ValueObject? other)
     {
-        public abstract class ValueObject
-        {
-            protected abstract IEnumerable<object> GetEqualityComponents();
-
-            public override bool Equals(object obj)
-            {
-                if (obj == null || obj.GetType() != GetType())
-                    return false;
-
-                var other = (ValueObject)obj;
-
-                using var thisValues = GetEqualityComponents().GetEnumerator();
-                using var otherValues = other.GetEqualityComponents().GetEnumerator();
-
-                while (thisValues.MoveNext() && otherValues.MoveNext())
-                {
-                    if (thisValues.Current == null ^ otherValues.Current == null)
-                        return false;
-
-                    if (thisValues.Current != null && !thisValues.Current.Equals(otherValues.Current))
-                        return false;
-                }
-
-                return !thisValues.MoveNext() && !otherValues.MoveNext();
-            }
-
-            public override int GetHashCode()
-            {
-                int hash = 0;
-                foreach (var obj in GetEqualityComponents())
-                {
-                    hash = hash ^ (obj?.GetHashCode() ?? 0);
-                }
-                return hash;
-            }
-        }
+        if (other is null || other.GetType() != GetType()) return false;
+        return GetEqualityComponents().SequenceEqual(other.GetEqualityComponents());
     }
 
+    public override bool Equals(object? obj) => obj is ValueObject other && Equals(other);
+
+    public override int GetHashCode()
+    {
+        var hash = new HashCode();
+        foreach (var component in GetEqualityComponents()) hash.Add(component);
+        return hash.ToHashCode();
+    }
 }

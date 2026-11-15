@@ -6,9 +6,9 @@ using System.Threading.Tasks;
 
 namespace Domain.Entities
 {
-    public class AuthenticationRequest
+    public sealed class AuthenticationRequest
     {
-        public string UserName { get; set; }
-        public string Password { get; set; }
+        public string UsernameOrEmail { get; init; } = string.Empty;
+        public string Password { get; init; } = string.Empty;
     }
 }

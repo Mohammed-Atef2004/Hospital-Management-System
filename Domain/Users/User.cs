@@ -3,7 +3,7 @@ using Domain.Users.Errors;
 using Domain.Users.Events;
 using Domain.Users.Rules;
 using Domain.Users.ValueObjects;
-using static Domain.Users.Errors.UserErrors;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Domain.Users;
 
@@ -23,7 +23,6 @@ public sealed class User : AggregateRoot<Guid>
 
     // ─── Lifecycle ─────────────────────────────────────────────────────────────
     public bool IsActive { get; private set; }
-    public bool IsDeleted { get; private set; }
     public DateTime RegisteredAt { get; private set; }
     public DateTime? DeletedAt { get; private set; }
     public string? DeleteReason { get; private set; }
@@ -48,11 +47,19 @@ public sealed class User : AggregateRoot<Guid>
     // ─── Password History ──────────────────────────────────────────────────────
 
     /// <summary>
-    /// Stores the last N password hashes (BCrypt).
+    /// Stores the last N ASP.NET Identity password hashes.
     /// The Application layer is responsible for hashing; the domain records history.
     /// </summary>
-    private readonly List<string> _passwordHashes = new();
+    private List<string> _passwordHashes = new();
+    [NotMapped]
     public IReadOnlyList<string> PasswordHashes => _passwordHashes.AsReadOnly();
+    public string PasswordHistoryJson
+    {
+        get => System.Text.Json.JsonSerializer.Serialize(_passwordHashes);
+        private set => _passwordHashes = string.IsNullOrWhiteSpace(value)
+            ? new List<string>()
+            : System.Text.Json.JsonSerializer.Deserialize<List<string>>(value) ?? new List<string>();
+    }
 
     /// <summary>UTC timestamp of the most recent password change.</summary>
     public DateTime? PasswordChangedAt { get; private set; }
@@ -75,8 +82,8 @@ public sealed class User : AggregateRoot<Guid>
         FullName = fullName;
         Role = role;
         IsActive = true;
-        IsDeleted = false;
         RegisteredAt = DateTime.UtcNow;
+        SetCreated(identityId);
     }
 
     /// <summary>
@@ -95,6 +102,9 @@ public sealed class User : AggregateRoot<Guid>
         // ── Validate identity reference ──
         if (string.IsNullOrWhiteSpace(identityId))
             return Result<User>.Failure(UserErrors.InvalidIdentityReference);
+
+        if (!Enum.IsDefined(role))
+            return Result<User>.Failure(UserErrors.InvalidRole);
 
         // ── Build Value Objects ──
         var emailResult = Email.Create(email);
@@ -148,6 +158,7 @@ public sealed class User : AggregateRoot<Guid>
 
         var oldName = FullName.DisplayName;
         FullName = result.Value;
+        SetUpdated("system");
 
         AddDomainEvent(new UserNameChangedDomainEvent(Id, oldName, FullName.DisplayName));
         return Result.Success();
@@ -162,6 +173,7 @@ public sealed class User : AggregateRoot<Guid>
 
         var oldPhone = PhoneNumber?.Value;
         PhoneNumber = result.Value;
+        SetUpdated("system");
 
         AddDomainEvent(new UserPhoneNumberChangedDomainEvent(Id, oldPhone, PhoneNumber.Value));
         return Result.Success();
@@ -172,7 +184,9 @@ public sealed class User : AggregateRoot<Guid>
         if (!CanModify()) return Result.Failure(UserErrors.Deactivated);
 
         var oldPhone = PhoneNumber?.Value;
+        if (oldPhone is null) return Result.Success();
         PhoneNumber = null;
+        SetUpdated("system");
 
         AddDomainEvent(new UserPhoneNumberChangedDomainEvent(Id, oldPhone, null));
         return Result.Success();
@@ -184,6 +198,7 @@ public sealed class User : AggregateRoot<Guid>
     {
         if (!CanModify()) return Result.Failure(UserErrors.Deactivated);
         if (Role == newRole) return Result.Failure(UserErrors.RoleAlreadyAssigned);
+        if (!Enum.IsDefined(newRole)) return Result.Failure(UserErrors.InvalidRole);
 
         // SuperAdmin is only seeded, never assigned through normal flow
         if (newRole == UserRole.Admin)
@@ -191,6 +206,7 @@ public sealed class User : AggregateRoot<Guid>
 
         var oldRole = Role;
         Role = newRole;
+        SetUpdated("system");
 
         AddDomainEvent(new UserRoleChangedDomainEvent(Id, oldRole, newRole));
         return Result.Success();
@@ -203,6 +219,8 @@ public sealed class User : AggregateRoot<Guid>
 
     public Result Deactivate(string reason)
     {
+        if (string.IsNullOrWhiteSpace(reason))
+            return Result.Failure(UserErrors.InvalidReason);
         if (Role == UserRole.Admin)
             return Result.Failure(UserErrors.CannotDeactivateSuperAdmin);
 
@@ -210,6 +228,7 @@ public sealed class User : AggregateRoot<Guid>
             return Result.Failure(UserErrors.Deactivated);
 
         IsActive = false;
+        SetUpdated("system");
 
         AddDomainEvent(new UserDeactivatedDomainEvent(Id, reason));
         return Result.Success();
@@ -221,6 +240,7 @@ public sealed class User : AggregateRoot<Guid>
         if (IsActive) return Result.Failure(UserErrors.AlreadyActive);
 
         IsActive = true;
+        SetUpdated("system");
 
         AddDomainEvent(new UserReactivatedDomainEvent(Id));
         return Result.Success();
@@ -229,18 +249,21 @@ public sealed class User : AggregateRoot<Guid>
     /// <summary>Soft delete — data is retained, user cannot log in.</summary>
     public Result Delete(string reason)
     {
+        if (string.IsNullOrWhiteSpace(reason))
+            return Result.Failure(UserErrors.InvalidReason);
         if (Role == UserRole.Admin)
             return Result.Failure(UserErrors.CannotDeleteSuperAdmin);
 
         if (IsDeleted)
             return Result.Failure(UserErrors.AlreadyDeleted);
 
-        IsDeleted = true;
+        base.Delete();
         IsActive = false;
         DeletedAt = DateTime.UtcNow;
-        DeleteReason = reason;
+        DeleteReason = reason.Trim();
+        SetUpdated("system");
 
-        AddDomainEvent(new UserDeletedDomainEvent(Id, Email.Value, reason));
+        AddDomainEvent(new UserDeletedDomainEvent(Id, Email.Value, DeleteReason));
         return Result.Success();
     }
 
@@ -251,15 +274,15 @@ public sealed class User : AggregateRoot<Guid>
     /// </summary>
     public Result RecordSuccessfulLogin(string ipAddress)
     {
-        if (IsLockedOut())
-            return Result.Failure(SecurityErrors.AccountLocked);
-
         if (!CanModify())
             return Result.Failure(UserErrors.Deactivated);
+        if (IsLockedOut())
+            return Result.Failure(UserErrors.SecurityErrors.AccountLocked);
 
         FailedLoginAttempts = 0;
         LockedUntil = null;
         LastLoginAt = DateTime.UtcNow;
+        SetUpdated("system");
 
         AddDomainEvent(new UserLoggedInSuccessfullyDomainEvent(Id, ipAddress, LastLoginAt.Value));
         return Result.Success();
@@ -270,8 +293,17 @@ public sealed class User : AggregateRoot<Guid>
     /// </summary>
     public Result RecordFailedLogin(string ipAddress)
     {
-        if (IsDeleted)
-            return Result.Failure(UserErrors.AlreadyDeleted);
+        if (!IsActive || IsDeleted)
+            return Result.Failure(UserErrors.Deactivated);
+        if (IsLockedOut())
+            return Result.Failure(UserErrors.SecurityErrors.AccountLocked);
+
+        // A new lockout period starts with a fresh attempt count.
+        if (LockedUntil.HasValue)
+        {
+            FailedLoginAttempts = 0;
+            LockedUntil = null;
+        }
 
         FailedLoginAttempts++;
 
@@ -285,14 +317,19 @@ public sealed class User : AggregateRoot<Guid>
             AddDomainEvent(new UserAccountLockedDomainEvent(Id, LockedUntil.Value));
         }
 
+        SetUpdated("system");
+
         return Result.Success();
     }
 
     /// <summary>Manually unlocks an account (Admin action).</summary>
     public Result UnlockAccount()
     {
+        if (IsDeleted) return Result.Failure(UserErrors.AlreadyDeleted);
+        if (LockedUntil is null) return Result.Failure(UserErrors.SecurityErrors.AccountNotLocked);
         FailedLoginAttempts = 0;
         LockedUntil = null;
+        SetUpdated("system");
 
         AddDomainEvent(new UserAccountUnlockedDomainEvent(Id));
         return Result.Success();
@@ -306,14 +343,16 @@ public sealed class User : AggregateRoot<Guid>
     /// </summary>
     public Result EnableTwoFactor(string secret)
     {
+        if (!CanModify()) return Result.Failure(UserErrors.Deactivated);
         if (IsTwoFactorEnabled)
-            return Result.Failure(SecurityErrors.TwoFactorAlreadyEnabled);
+            return Result.Failure(UserErrors.SecurityErrors.TwoFactorAlreadyEnabled);
 
-        if (string.IsNullOrWhiteSpace(secret))
-            return Result.Failure(SecurityErrors.InvalidTwoFactorSecret);
+        if (!IsValidTwoFactorSecret(secret))
+            return Result.Failure(UserErrors.SecurityErrors.InvalidTwoFactorSecret);
 
-        TwoFactorSecret = secret;
+        TwoFactorSecret = secret.Trim().ToUpperInvariant();
         IsTwoFactorEnabled = true;
+        SetUpdated("system");
 
         AddDomainEvent(new UserTwoFactorEnabledDomainEvent(Id));
         return Result.Success();
@@ -321,11 +360,13 @@ public sealed class User : AggregateRoot<Guid>
 
     public Result DisableTwoFactor()
     {
+        if (!CanModify()) return Result.Failure(UserErrors.Deactivated);
         if (!IsTwoFactorEnabled)
-            return Result.Failure(SecurityErrors.TwoFactorNotEnabled);
+            return Result.Failure(UserErrors.SecurityErrors.TwoFactorNotEnabled);
 
         TwoFactorSecret = null;
         IsTwoFactorEnabled = false;
+        SetUpdated("system");
 
         AddDomainEvent(new UserTwoFactorDisabledDomainEvent(Id));
         return Result.Success();
@@ -342,11 +383,13 @@ public sealed class User : AggregateRoot<Guid>
     public Result RecordPasswordChange(string newPasswordHash, bool isPasswordReused)
     {
         if (!CanModify()) return Result.Failure(UserErrors.Deactivated);
+        if (string.IsNullOrWhiteSpace(newPasswordHash))
+            return Result.Failure(UserErrors.SecurityErrors.InvalidPasswordHash);
 
         var reuseRule = CheckRule(new PasswordMustNotBeReusedRule(isPasswordReused));
         if (reuseRule.IsFailure) return Result.Failure(reuseRule.Error);
 
-        _passwordHashes.Add(newPasswordHash);
+        _passwordHashes.Add(newPasswordHash.Trim());
 
         // Keep only the last N hashes (trim older ones)
         const int maxHistory = PasswordMustNotBeReusedRule.HistoryDepth;
@@ -354,6 +397,7 @@ public sealed class User : AggregateRoot<Guid>
             _passwordHashes.RemoveAt(0);
 
         PasswordChangedAt = DateTime.UtcNow;
+        SetUpdated("system");
 
         AddDomainEvent(new UserPasswordChangedDomainEvent(Id, PasswordChangedAt.Value));
         return Result.Success();
@@ -362,9 +406,17 @@ public sealed class User : AggregateRoot<Guid>
     // ─── Private Helpers ──────────────────────────────────────────────────────
 
     /// <summary>True when the account is unlocked and not soft-deleted.</summary>
-    private bool CanModify() => IsActive && !IsDeleted && !IsLockedOut();
+    private bool CanModify() => IsActive && !IsDeleted;
 
     /// <summary>True when a lockout is currently in effect.</summary>
     private bool IsLockedOut() =>
         LockedUntil.HasValue && LockedUntil.Value > DateTime.UtcNow;
+
+    private static bool IsValidTwoFactorSecret(string? secret)
+    {
+        if (string.IsNullOrWhiteSpace(secret)) return false;
+        var normalized = secret.Trim().ToUpperInvariant();
+        return normalized.Length is >= 16 and <= 128
+               && normalized.All(character => char.IsAsciiLetterUpper(character) || character is >= '2' and <= '7');
+    }
 }
