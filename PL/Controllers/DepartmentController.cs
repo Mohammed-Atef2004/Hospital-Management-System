@@ -7,11 +7,13 @@ using Application.Features.Departments.Queries.GetAll;
 using Application.Features.Departments.Queries.GetById;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
 
 namespace API.Controllers
 {
     [ApiController]
     [Route("api/departments")]
+    [Authorize(Policy = "Administrative")]
     public class DepartmentsController : ControllerBase
     {
         private readonly IMediator _mediator;

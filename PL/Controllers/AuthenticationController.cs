@@ -4,11 +4,13 @@ using Application.Features.Authentication.Commands.ChangePassword;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 
 namespace API.Controllers;
 
 [ApiController]
 [Route("api/auth")]
+[EnableRateLimiting("auth")]
 public sealed class AuthenticationController : ControllerBase
 {
     private readonly IMediator _mediator;

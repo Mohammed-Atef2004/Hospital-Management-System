@@ -1,4 +1,5 @@
-﻿using MediatR;
+using Application.Common;
+using MediatR;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -10,5 +11,5 @@ namespace Application.Features.Doctors.Commands.GrantSystemAccess
     public record GrantSystemAccessToDoctorCommand(
      int DoctorId,
      string ApplicationUserId
- ) : IRequest;
+ ) : ICommandRequest<Unit>;
 }

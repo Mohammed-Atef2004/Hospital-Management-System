@@ -1,10 +1,8 @@
 using Application.Features.Authentication;
 using Domain.SharedKernel;
 using Domain.Users;
-using Infastructure.Presistence.Database;
 using MediatR;
 using Microsoft.AspNetCore.Identity;
-using Microsoft.EntityFrameworkCore;
 
 namespace Application.Features.Authentication.Commands.Login;
 
@@ -12,22 +10,19 @@ public sealed class LoginUserCommandHandler : IRequestHandler<LoginUserCommand, 
 {
     private readonly UserManager<IdentityUser> _userManager;
     private readonly IUserRepository _users;
-    private readonly ApplicationDbContext _dbContext;
+    private readonly Application.Common.ITransactionManager _transactions;
     private readonly IAuthTokenService _tokens;
-    private readonly IMediator _mediator;
 
     public LoginUserCommandHandler(
         UserManager<IdentityUser> userManager,
         IUserRepository users,
-        ApplicationDbContext dbContext,
-        IAuthTokenService tokens,
-        IMediator mediator)
+        Application.Common.ITransactionManager transactions,
+        IAuthTokenService tokens)
     {
         _userManager = userManager;
         _users = users;
-        _dbContext = dbContext;
+        _transactions = transactions;
         _tokens = tokens;
-        _mediator = mediator;
     }
 
     public async Task<Result<AuthResponse>> Handle(LoginUserCommand request, CancellationToken cancellationToken)
@@ -47,8 +42,7 @@ public sealed class LoginUserCommandHandler : IRequestHandler<LoginUserCommand, 
             var failedLogin = user.RecordFailedLogin(request.IpAddress);
             if (failedLogin.IsSuccess)
             {
-                await _dbContext.SaveChangesAsync(cancellationToken);
-                await PublishEventsAsync(user, cancellationToken);
+                await _transactions.SaveChangesAsync(cancellationToken);
             }
             return Result<AuthResponse>.Failure(AuthenticationErrors.InvalidCredentials);
         }
@@ -57,18 +51,10 @@ public sealed class LoginUserCommandHandler : IRequestHandler<LoginUserCommand, 
         if (loginResult.IsFailure)
             return Result<AuthResponse>.Failure(AuthenticationErrors.InvalidCredentials);
 
-        await _dbContext.SaveChangesAsync(cancellationToken);
-        await PublishEventsAsync(user, cancellationToken);
-
+        await _transactions.SaveChangesAsync(cancellationToken);
         var (token, expiresAtUtc) = _tokens.CreateToken(user);
         return Result<AuthResponse>.Success(new AuthResponse(
             token, expiresAtUtc, user.Id, user.Username.Value, user.Role.ToString()));
     }
 
-    private async Task PublishEventsAsync(User user, CancellationToken cancellationToken)
-    {
-        foreach (var domainEvent in user.DomainEvents)
-            await _mediator.Publish(domainEvent, cancellationToken);
-        user.ClearDomainEvents();
-    }
 }

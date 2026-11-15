@@ -1,4 +1,5 @@
-﻿using MediatR;
+using Application.Common;
+using MediatR;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -7,6 +8,6 @@ using System.Threading.Tasks;
 
 namespace Application.Features.Departments.Commands.Activate
 {
-    public record ActivateDepartmentCommand(int Id) : IRequest;
+    public record ActivateDepartmentCommand(int Id) : ICommandRequest<Unit>;
 
 }

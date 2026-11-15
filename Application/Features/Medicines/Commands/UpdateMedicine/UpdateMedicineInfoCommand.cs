@@ -1,4 +1,5 @@
-﻿using MediatR;
+using Application.Common;
+using MediatR;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -13,5 +14,5 @@ namespace Application.Features.Medicines.Commands.UpdateMedicine
     decimal? Price,
     DateTime? ExpiryDate,
     string? UpdatedBy
-) : IRequest;
+) : ICommandRequest<Unit>;
 }

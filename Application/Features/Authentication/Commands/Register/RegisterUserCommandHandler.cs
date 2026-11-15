@@ -2,10 +2,8 @@ using Application.Features.Authentication;
 using Domain.SharedKernel;
 using Domain.Users;
 using Domain.Users.ValueObjects;
-using Infastructure.Presistence.Database;
 using MediatR;
 using Microsoft.AspNetCore.Identity;
-using Microsoft.EntityFrameworkCore;
 
 namespace Application.Features.Authentication.Commands.Register;
 
@@ -13,22 +11,19 @@ public sealed class RegisterUserCommandHandler : IRequestHandler<RegisterUserCom
 {
     private readonly UserManager<IdentityUser> _userManager;
     private readonly IUserRepository _users;
-    private readonly ApplicationDbContext _dbContext;
+    private readonly Application.Common.ITransactionManager _transactions;
     private readonly IAuthTokenService _tokens;
-    private readonly IMediator _mediator;
 
     public RegisterUserCommandHandler(
         UserManager<IdentityUser> userManager,
         IUserRepository users,
-        ApplicationDbContext dbContext,
-        IAuthTokenService tokens,
-        IMediator mediator)
+        Application.Common.ITransactionManager transactions,
+        IAuthTokenService tokens)
     {
         _userManager = userManager;
         _users = users;
-        _dbContext = dbContext;
+        _transactions = transactions;
         _tokens = tokens;
-        _mediator = mediator;
     }
 
     public async Task<Result<AuthResponse>> Handle(RegisterUserCommand request, CancellationToken cancellationToken)
@@ -38,7 +33,6 @@ public sealed class RegisterUserCommandHandler : IRequestHandler<RegisterUserCom
         var usernameResult = Username.Create(request.Username);
         if (usernameResult.IsFailure) return Result<AuthResponse>.Failure(usernameResult.Error);
 
-        await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
         var domainResult = User.Create(
             identityId: Guid.NewGuid().ToString("N"),
             email: emailResult.Value.Value,
@@ -82,12 +76,7 @@ public sealed class RegisterUserCommandHandler : IRequestHandler<RegisterUserCom
         }
 
         await _users.AddAsync(user);
-        await _dbContext.SaveChangesAsync(cancellationToken);
-        await transaction.CommitAsync(cancellationToken);
-
-        foreach (var domainEvent in user.DomainEvents)
-            await _mediator.Publish(domainEvent, cancellationToken);
-        user.ClearDomainEvents();
+        await _transactions.SaveChangesAsync(cancellationToken);
 
         var (token, expiresAtUtc) = _tokens.CreateToken(user);
         return Result<AuthResponse>.Success(new AuthResponse(

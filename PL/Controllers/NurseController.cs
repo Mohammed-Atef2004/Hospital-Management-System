@@ -12,11 +12,13 @@ using Application.Features.Nurses.Queries.GetNurseById;
 using Application.Features.Nurses.Queries.GetShiftAssignedPatients;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
 
 namespace API.Controllers
 {
     [ApiController]
     [Route("api/nurses")]
+    [Authorize(Policy = "Clinical")]
     public class NurseController : ControllerBase
     {
         private readonly IMediator _mediator;
@@ -63,7 +65,7 @@ namespace API.Controllers
         }
 
 
-        [HttpPut("/update")]
+        [HttpPut("update")]
         public async Task<IActionResult> UpdateNurse([FromBody] UpdateNurseCommand command)
         {
             await _mediator.Send(command);

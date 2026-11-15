@@ -7,11 +7,13 @@ using Application.Features.Shifts.Queries.GetShiftById;
 using Application.Features.Shifts.Queries.GetStaffShifts;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
 
 namespace API.Controllers
 {
     [ApiController]
-    [Route("api/Shifts")]
+    [Route("api/shifts")]
+    [Authorize(Policy = "Administrative")]
     public class ShiftController : ControllerBase
     {
         private readonly IMediator _mediator;

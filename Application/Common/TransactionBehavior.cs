@@ -1,27 +1,30 @@
-﻿using Infastructure.Presistence.Database;
 using MediatR;
+using Domain.SharedKernel;
 
-public class TransactionBehavior<TRequest, TResponse>
-    : IPipelineBehavior<TRequest, TResponse>
-    where TRequest : IRequest<TResponse>
+namespace Application.Common;
+
+/// <summary>Wraps write requests in one persistence transaction. Queries never open transactions.</summary>
+public sealed class TransactionBehavior<TRequest, TResponse> : IPipelineBehavior<TRequest, TResponse>
+    where TRequest : ICommandRequest<TResponse>
 {
-    private readonly ApplicationDbContext _context;
+    private readonly ITransactionManager _transactions;
 
-    public TransactionBehavior(ApplicationDbContext context)
-    {
-        _context = context;
-    }
+    public TransactionBehavior(ITransactionManager transactions) => _transactions = transactions;
 
     public async Task<TResponse> Handle(
         TRequest request,
         RequestHandlerDelegate<TResponse> next,
         CancellationToken cancellationToken)
     {
-        using var transaction = await _context.Database.BeginTransactionAsync(cancellationToken);
-
+        await using var transaction = await _transactions.BeginTransactionAsync(cancellationToken);
         try
         {
             var response = await next();
+            if (response is Result result && result.IsFailure)
+            {
+                await transaction.RollbackAsync(cancellationToken);
+                return response;
+            }
             await transaction.CommitAsync(cancellationToken);
             return response;
         }

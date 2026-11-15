@@ -13,11 +13,13 @@ using Application.Features.Medicines.Queries.GetWithDetails;
 using MediatR;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
 
 namespace API.Controllers
 {
-    [Route("api/[controller]")]
+    [Route("api/medicines")]
     [ApiController]
+    [Authorize(Policy = "Clinical")]
     public class MedicineController : ControllerBase
     {
         private readonly IMediator _mediator;
@@ -69,6 +71,7 @@ namespace API.Controllers
         }
 
         [HttpPost]
+        [Authorize(Policy = "Administrative")]
         public async Task<IActionResult> Create([FromBody] AddMedicineCommand command)
         {
             var id = await _mediator.Send(command);
@@ -76,6 +79,7 @@ namespace API.Controllers
         }
 
         [HttpPut("{id}")]
+        [Authorize(Policy = "Administrative")]
         public async Task<IActionResult> Update(int id, [FromBody] UpdateMedicineCommand command)
         {
             if (id != command.Id) return BadRequest("ID Mismatch");
@@ -84,6 +88,7 @@ namespace API.Controllers
         }
 
         [HttpDelete("{id}")]
+        [Authorize(Policy = "Administrative")]
         public async Task<IActionResult> Delete(int id)
         {
             await _mediator.Send(new DeleteMedicineCommand(id));
@@ -92,6 +97,7 @@ namespace API.Controllers
 
 
         [HttpPost("adjust-stock")]
+        [Authorize(Policy = "Administrative")]
         public async Task<IActionResult> AdjustStock([FromBody] MedicineAdjustStockCommand command)
         {
             var newStock = await _mediator.Send(command);

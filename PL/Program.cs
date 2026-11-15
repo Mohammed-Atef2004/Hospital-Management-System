@@ -16,12 +16,15 @@ using Infastructure.Repositories;
 using Infrastructure.Repositories;
 using Infrastructure.Services;
 using API.Services;
+using Application.Common;
 using MediatR;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.RateLimiting;
+using System.Threading.RateLimiting;
 using System.Security.Claims;
 using System.Text;
 
@@ -32,9 +35,11 @@ namespace Presentation
         public static void Main(string[] args)
         {
             var builder = WebApplication.CreateBuilder(args);
+            builder.Logging.AddJsonConsole();
 
             // ================== Controllers ==================
             builder.Services.AddControllers();
+            builder.Services.AddHealthChecks();
 
             // ================== Swagger ==================
             builder.Services.AddEndpointsApiExplorer();
@@ -88,12 +93,31 @@ namespace Presentation
                     };
                 });
             builder.Services.AddAuthorization(options =>
+            {
                 options.FallbackPolicy = new AuthorizationPolicyBuilder()
                     .RequireAuthenticatedUser()
-                    .Build());
+                    .Build();
+                options.AddPolicy("Administrative", policy => policy.RequireRole("Admin"));
+                options.AddPolicy("Clinical", policy => policy.RequireRole("Admin", "Doctor", "Nurse"));
+                options.AddPolicy("CareProviders", policy => policy.RequireRole("Admin", "Doctor"));
+            });
+            builder.Services.AddRateLimiter(options =>
+            {
+                options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+                options.AddPolicy("auth", context => RateLimitPartition.GetFixedWindowLimiter(
+                    context.Connection.RemoteIpAddress?.ToString() ?? "unknown",
+                    _ => new FixedWindowRateLimiterOptions
+                    {
+                        PermitLimit = 10,
+                        Window = TimeSpan.FromMinutes(1),
+                        QueueLimit = 0,
+                        AutoReplenishment = true
+                    }));
+            });
 
             // ================== Repositories + UoW ==================
             builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
+            builder.Services.AddScoped<ITransactionManager, Infrastructure.Persistence.EfTransactionManager>();
             builder.Services.AddScoped<IDepartmentRepository, DepartmentRepository>();
             builder.Services.AddScoped<IDoctorRepository, DoctorRepository>();
             builder.Services.AddScoped<IPatientRepository, PatientRepository>();
@@ -132,9 +156,11 @@ namespace Presentation
             app.UseHttpsRedirection();
 
             app.UseAuthentication();
+            app.UseRateLimiter();
             app.UseAuthorization();
 
             app.MapControllers();
+            app.MapHealthChecks("/health").AllowAnonymous();
 
             app.Run();
         }

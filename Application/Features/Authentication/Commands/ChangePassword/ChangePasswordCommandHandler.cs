@@ -2,10 +2,8 @@ using Application.Features.Authentication;
 using Domain.SharedKernel;
 using Domain.Users;
 using Domain.Users.Errors;
-using Infastructure.Presistence.Database;
 using MediatR;
 using Microsoft.AspNetCore.Identity;
-using Microsoft.EntityFrameworkCore;
 
 namespace Application.Features.Authentication.Commands.ChangePassword;
 
@@ -13,19 +11,16 @@ public sealed class ChangePasswordCommandHandler : IRequestHandler<ChangePasswor
 {
     private readonly UserManager<IdentityUser> _userManager;
     private readonly IUserRepository _users;
-    private readonly ApplicationDbContext _dbContext;
-    private readonly IMediator _mediator;
+    private readonly Application.Common.ITransactionManager _transactions;
 
     public ChangePasswordCommandHandler(
         UserManager<IdentityUser> userManager,
         IUserRepository users,
-        ApplicationDbContext dbContext,
-        IMediator mediator)
+        Application.Common.ITransactionManager transactions)
     {
         _userManager = userManager;
         _users = users;
-        _dbContext = dbContext;
-        _mediator = mediator;
+        _transactions = transactions;
     }
 
     public async Task<Result> Handle(ChangePasswordCommand request, CancellationToken cancellationToken)
@@ -45,7 +40,6 @@ public sealed class ChangePasswordCommandHandler : IRequestHandler<ChangePasswor
         if (passwordWasUsed)
             return Result.Failure(UserErrors.SecurityErrors.PasswordAlreadyUsed);
 
-        await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
         var identityResult = await _userManager.ChangePasswordAsync(
             identityUser, request.CurrentPassword, request.NewPassword);
         if (!identityResult.Succeeded)
@@ -59,12 +53,7 @@ public sealed class ChangePasswordCommandHandler : IRequestHandler<ChangePasswor
         var domainResult = user.RecordPasswordChange(identityUser.PasswordHash!, isPasswordReused: false);
         if (domainResult.IsFailure) return domainResult;
 
-        await _dbContext.SaveChangesAsync(cancellationToken);
-        await transaction.CommitAsync(cancellationToken);
-        foreach (var domainEvent in user.DomainEvents)
-            await _mediator.Publish(domainEvent, cancellationToken);
-        user.ClearDomainEvents();
-
+        await _transactions.SaveChangesAsync(cancellationToken);
         return Result.Success();
     }
 }

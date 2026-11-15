@@ -1,111 +1,69 @@
 # Hospital Management System
 
-An ASP.NET Core REST API for core hospital workflows. The solution is organized into Domain, Application, Infrastructure, and Presentation projects. It uses DDD building blocks in selected modules, CQRS with MediatR, Entity Framework Core, SQL Server, and JWT authentication.
+An ASP.NET Core Web API for hospital staff, appointments, departments, medicines, shifts, and patient assignments. The solution uses Domain, Application, Infrastructure, and API projects, with SQL Server persistence, ASP.NET Core Identity, JWT authentication, MediatR, and selected domain-driven design patterns.
 
-> **Project status:** early-stage application under active development. Several modules have working API/use-case paths, while patient workflows, staff identity integration, broader automated tests, and deployment tooling remain planned work.
+> **Status:** This project is under active development. Core staff and scheduling workflows are present. Patient-facing workflows, identity-to-staff linking, and several authentication flows are not implemented yet. See [Known gaps](#known-gaps).
 
-## Architecture
+## Solution structure
 
-### Projects and current dependencies
+| Project | Purpose |
+| --- | --- |
+| `Domain` | Entities, aggregates, value objects, domain rules, events, and persistence interfaces. |
+| `Application` | MediatR commands and queries, handlers, validation, DTOs, mappings, and transaction abstractions. |
+| `Infrastructure` | EF Core context, SQL Server configuration, repositories, Identity persistence, transaction implementation, and migrations. |
+| `PL` | ASP.NET Core API, controllers, authentication, authorization, middleware, and dependency injection. |
+| `Domain.Tests` | xUnit tests for domain behavior and selected persistence behavior. |
 
-```text
-                         ┌────────────────────────┐
-                         │ PL / Presentation      │
-                         │ ASP.NET Core API       │
-                         └──────┬─────────┬───────┘
-                                │         │
-                                ▼         ▼
-                      ┌────────────┐  ┌────────────────┐
-                      │Application │─▶│Infrastructure  │
-                      │CQRS/use    │  │EF Core/SQL     │
-                      │cases       │  │repositories    │
-                      └─────┬──────┘  └───────┬────────┘
-                            │                 │
-                            └────────┬────────┘
-                                     ▼
-                              ┌──────────┐
-                              │ Domain   │
-                              │ rules,   │
-                              │ entities │
-                              └──────────┘
-```
+The Application project depends on Domain abstractions. Infrastructure implements the transaction port used by Application. The API project composes the layers at startup.
 
-The intended direction is for Application to depend on Domain abstractions. **Today, Application also references Infrastructure** for persistence types such as `ApplicationDbContext`; this is a known dependency that should be removed as the architecture is tightened.
+### Request and persistence behavior
 
-| Project | Responsibility |
-|---|---|
-| `Domain/` | Business entities and aggregates, value objects, rules, domain events, errors, and repository/service interfaces. |
-| `Application/` | MediatR commands and queries, handlers, validators, DTOs, mappings, and pipeline behaviors. |
-| `Infrastructure/` | EF Core `ApplicationDbContext`, SQL Server mappings, repositories, `UnitOfWork`, Identity persistence, and migrations. |
-| `PL/` | ASP.NET Core controllers, middleware, JWT setup, dependency injection, and Swagger. |
-| `Domain.Tests/` | xUnit tests for domain behavior and selected persistence behavior. |
+- MediatR separates commands from queries. Write commands implement `ICommandRequest<T>` and run inside the transaction behavior; queries do not open transactions.
+- Failed domain `Result` responses roll back the transaction. Domain events are dispatched after commit. Event delivery is best-effort; there is no outbox yet.
+- FluentValidation runs through a MediatR pipeline behavior. EF Core persists domain and ASP.NET Identity data in SQL Server.
 
-### Shared patterns
+## Current modules
 
-- **DDD:** aggregate roots encapsulate state changes and raise domain events; value objects and business rules are used in the modules that have been refactored.
-- **CQRS:** Application separates commands and queries and uses MediatR handlers.
-- **Validation:** FluentValidation runs through a MediatR pipeline behavior.
-- **Transactions:** a MediatR transaction behavior and `UnitOfWork` support persistence. The current transaction behavior wraps every request, including queries; limiting it to write commands and standardizing event dispatch is planned. Some authentication handlers also manage persistence and event publication directly.
-- **Persistence:** EF Core maps the domain and ASP.NET Identity data to SQL Server.
+| Module | Available capabilities |
+| --- | --- |
+| Authentication | Registration, username/email login, JWTs, password changes, lockout rules, password history, and encrypted storage for a two-factor secret. |
+| Doctors and departments | Doctor lifecycle and profile updates; department creation, updates, activation, and deactivation. |
+| Appointments | Create, retrieve, update, cancel, and query appointments. |
+| Medicines | Medicine management, stock adjustment, dispensing, expiry, and low-stock queries. |
+| Nursing and shifts | Nurse management, shift scheduling, patient assignments and transfers, and vital-sign recording. |
+| Patients and records | Patient and clinical-record persistence entities are present; a complete patient API and application workflow are not. |
 
-## Modules
+## API
 
-| Module | Implemented capabilities | Current status / known gaps |
-|---|---|---|
-| **Authentication** | User aggregate, email/username/full-name/phone value objects, uniqueness and lockout rules, password history, lifecycle and security domain events. ASP.NET Identity registration, username/email login, JWT issue/validation, authenticated password change, and encrypted-at-rest TOTP secret persistence. | API flows for two-factor setup/verification, email confirmation, password reset, refresh tokens, and account recovery are not implemented. JWT roles exist, but staff records are not yet linked to user identities and authorization policies by role are not defined. **Known transaction defect:** register and change-password handlers open transactions while the global MediatR transaction behavior also opens one, so these database-backed flows need transaction consolidation and integration verification. |
-| **Doctors** | Doctor aggregate behavior, value objects, domain events, department transfer, office/contact/specialization updates, lifecycle actions, schedules, and appointment-related rules/use cases. | Expand aggregate and API tests; review authorization and consistency of validation/error handling across commands. |
-| **Departments** | Department lifecycle and information changes, value objects, domain events, CQRS handlers, and controller endpoints. | Automated behavior and API tests are limited; persistence and uniqueness behavior should be covered end to end. |
-| **Appointments** | Appointment aggregate, schedule/description/participant value objects, domain events, create/update/cancel use cases, and doctor/patient/upcoming/cancelled queries. | Add tests for overlap, availability, concurrent booking, and cross-aggregate rules; ensure these are enforced consistently at the application and persistence boundaries. |
-| **Medicines and dispensing** | Medicine commands and queries, stock adjustment, dispensing, expiry/low-stock queries, and supporting entities for dispense and stock adjustment. | No medicine-focused test suite is present. Bring the module to the same DDD conventions and add coverage for inventory concurrency and dispensing rules. |
-| **Nursing, staff, and shifts** | Nurse and shift endpoints/use cases, staff scheduling, patient assignments, transfers, and vital-sign recording. | Current-user context expects a `staff_id` JWT claim, while issued tokens currently carry the domain user and Identity IDs. Link staff accounts to users before relying on staff-specific identity and authorization. Add tests for API policies and persistence workflows. |
-| **Patients and clinical records** | Patient, medical-record, prescription, pharmacy, and vital-sign persistence/domain entities; patient repository support is present. | A complete patient Application/API module is not present. Define patient registration/profile workflows and access rules before exposing clinical records. |
+The API base path is `/api`. Swagger is available in Development. Routes use lowercase names.
 
-## API overview
+| Route | Main operations |
+| --- | --- |
+| `/api/auth` | Register, login, change password. |
+| `/api/doctors` | List, retrieve, register, update, transfer, deactivate, and reactivate doctors. |
+| `/api/departments` | Create, list, retrieve, rename, update description, activate, and deactivate. |
+| `/api/appointments` | Create, list, retrieve by doctor or patient, reschedule, update, and cancel. |
+| `/api/medicines` | List, retrieve, create, update, delete, adjust stock, dispense, and query stock/expiry. |
+| `/api/nurses` | List, retrieve, register, update, assign/transfer/end assignments, record vital signs, and update department or head-nurse status. |
+| `/api/shifts` | Create, update, remove, retrieve, and query available shifts. |
+| `/health` | Anonymous process health endpoint. |
 
-The API is rooted at `/api`. Swagger UI is enabled in the Development environment.
+All routes require authentication by default, except registration, login, and `/health`. Department, doctor-management, and shift endpoints require the `Admin` role. Appointment endpoints require `Admin` or `Doctor`. Nurse endpoints and medicine reads/dispensing require `Admin`, `Doctor`, or `Nurse`; medicine creation, updates, deletion, and stock adjustments require `Admin`.
 
-| Controller | Route | Main operations |
-|---|---|---|
-| `AuthenticationController` | `/api/auth` | `POST /register`, `POST /login`, `POST /change-password` |
-| `DoctorsController` | `/api/Doctors` (`[controller]`) | Register, retrieve, update doctor details, department transfer, deactivate/reactivate |
-| `DepartmentsController` | `/api/departments` | Create, retrieve, list, rename/update, activate/deactivate |
-| `AppointmentsController` | `/api/Appointments` (`[controller]`) | Create, retrieve/list, query by doctor/patient/status, reschedule, update details, cancel |
-| `MedicineController` | `/api/Medicine` (`[controller]`) | CRUD, stock adjustment, dispense, expiry and low-stock queries |
-| `NurseController` | `/api/nurses` | Register, update, assign/transfer/end patient assignments, record vital signs, department/head-nurse updates |
-| `ShiftController` | `/api/Shifts` | Create/update/remove, retrieve by ID/staff, list available shifts |
+Authentication endpoints are limited to 10 requests per minute per client IP. Patient clinical records are not exposed through the API because identity-to-patient ownership checks are not implemented.
 
-All API endpoints require a valid bearer token by default. Registration and login are anonymous; password change requires authentication. Role-specific access rules are a planned follow-up. Route casing and some endpoint conventions still need standardization.
+## Requirements
 
-## Technology
+- .NET 8 SDK
+- SQL Server 2022 or compatible SQL Server
+- EF Core CLI 9.0.9 or a compatible EF Core 9 tool
+- Docker Compose (optional, for the container setup)
 
-| Concern | Technology |
-|---|---|
-| API, Application, Domain, Infrastructure target | .NET 8 |
-| Test project target | .NET 9 |
-| Web framework | ASP.NET Core Web API |
-| Data access | EF Core 9, SQL Server |
-| Identity and tokens | ASP.NET Core Identity, JWT Bearer |
-| Use cases | MediatR 11, CQRS |
-| Validation and mapping | FluentValidation 12, AutoMapper 12 |
-| Tests | xUnit, FluentAssertions |
+## Local setup
 
-The test project currently targets .NET 9 while the application projects target .NET 8. Aligning the target frameworks is part of the maintenance plan.
-
-## Getting started
-
-### Prerequisites
-
-- .NET 9 SDK (builds the .NET 8 projects and the .NET 9 test project).
-- SQL Server, local or containerized.
-- EF Core CLI (`dotnet-ef`) compatible with EF Core 9 for migration commands.
-
-### Configure
-
-The default connection string is in `PL/appsettings.json`. Change it for your local SQL Server or set `ConnectionStrings__DefaultConnection` in the environment.
-
-Development uses a development-only JWT signing key from `PL/appsettings.Development.json`. For any non-development environment, configure a private `JWT__SigningKey` with at least 32 UTF-8 bytes, along with the required `JWT__Issuer` and `JWT__Audience` values. Do not use the development key outside local development.
-
-### Restore, migrate, build, test, and run
+1. Set `ConnectionStrings__DefaultConnection` for your SQL Server. The checked-in connection string is only a local development default.
+2. Development reads its JWT signing key from `PL/appsettings.Development.json`. Outside Development, set `JWT__SigningKey` to a private value of at least 32 UTF-8 bytes and configure `JWT__Issuer` and `JWT__Audience`. Never reuse the development key in another environment.
+3. Restore packages, apply migrations, build, test, and run:
 
 ```bash
 dotnet restore Hospital-Management-System.sln
@@ -115,54 +73,40 @@ dotnet test Hospital-Management-System.sln
 dotnet run --project PL --launch-profile http
 ```
 
-The HTTP development profile serves the API at `http://localhost:5277` and Swagger at `http://localhost:5277/swagger`.
+The HTTP development profile serves the API at `http://localhost:5277`; Swagger is at `http://localhost:5277/swagger`.
 
-The repository currently contains a single `InitialCreate` migration. Check the target database schema before applying it to an existing database; the initial migration is intended to establish the schema and may conflict with tables created outside EF migrations.
+The repository has an `InitialCreate` migration. Before applying it to an existing database, compare the current schema with the migration: it is intended to establish the schema and can conflict with tables created outside EF migrations.
 
-### Authentication endpoints
+## Docker Compose
 
-- `POST /api/auth/register` — creates a patient account and returns a JWT.
-- `POST /api/auth/login` — accepts a username or email and returns a JWT.
-- `POST /api/auth/change-password` — authenticated password change.
+Set `MSSQL_SA_PASSWORD` and `JWT_SIGNING_KEY` in the environment. The JWT key must contain at least 32 bytes. Then start the API and SQL Server:
 
-Send the returned token as `Authorization: Bearer <token>` to protected endpoints.
+```bash
+docker compose up --build
+```
+
+The API listens on port `8080`, and SQL Server data is stored in the `sqlserver-data` volume. Apply the EF migration to the Compose database before using the API. Compose does not run migrations automatically.
+
+## Configuration and operations
+
+- Environment variables override JSON configuration. Keep production connection strings and signing keys in a deployment secret store.
+- Logs are written as structured JSON to standard output.
+- The `/health` endpoint checks that the API process responds; it does not verify database connectivity.
+- Back up SQL Server data and the ASP.NET Core Data Protection key ring. The key ring protects persisted two-factor secrets; losing it makes those secrets unreadable. Test database and key-ring restores before applying migrations to an existing deployment.
+- CI runs restore, Release build, tests, and EF pending-model-change validation for pull requests and pushes to `main` or `master`.
 
 ## Tests
 
-The most recent full solution test run passed **132 tests**. Existing tests cover doctor lifecycle/scheduling/appointments, departments, nurses and staff shifts, patient assignments, user authentication rules/value objects, and two-factor secret persistence conversion.
+The test project targets .NET 8 with the rest of the solution. The existing suite contains 132 tests covering doctor lifecycle, scheduling and appointments, departments, nurses and shifts, patient assignments, user authentication rules and value objects, and two-factor secret persistence conversion.
 
-Test coverage is still uneven: medicine behavior, authentication/Application handlers, controller authorization, HTTP contracts, and real SQL Server persistence flows do not have comprehensive automated tests. Add Application unit tests and API/infrastructure integration tests as those workflows are expanded.
+Coverage remains limited for Application handlers, API authorization and HTTP contracts, concurrent appointment/stock updates, and SQL Server integration workflows. The CI workflow runs the existing tests; it does not replace those missing test suites.
 
-## Development plan
+## Known gaps
 
-The list below describes work still to do; it is separate from the implemented capabilities above.
-
-### Priority 1 — Make identity and authorization complete
-
-- Link Identity/domain users to Doctor, Nurse, and other staff records and issue the staff identifier claim consistently.
-- Add role and policy authorization for administrative, clinical, and patient operations; verify resource ownership for patient data.
-- Consolidate database transactions: keep transaction creation in one layer, and apply the transaction behavior only to writes rather than queries.
-- Complete two-factor setup and verification, email confirmation, password reset/recovery, and refresh-token flows.
-- Add request throttling and security-focused API tests for login, registration, and account lockout.
-
-### Priority 2 — Complete core workflows and their tests
-
-- Add patient registration/profile use cases and API endpoints; define permissions for medical records and prescriptions.
-- Expand department and appointment tests, including schedule conflicts, concurrent bookings, and integration with doctor availability.
-- Add medicine/dispensing tests and protect stock updates from concurrent writes.
-- Add Application handler tests and API/infrastructure integration tests using a test database.
-
-### Priority 3 — Make architecture consistent
-
-- Remove Application's direct dependency on Infrastructure by introducing persistence ports and moving transaction boundaries to a clear application abstraction.
-- Standardize aggregates, value objects, domain events, errors, and validation across Medicine, Nurse, Staff, Shift, Patient, and assignment workflows.
-- Dispatch domain events consistently after commit; consider an outbox for reliable delivery when external handlers are introduced.
-- Standardize route casing, DTOs, error responses, pagination, and API versioning.
-
-### Priority 4 — Prepare for deployment and operations
-
-- Align project target frameworks and update vulnerable/outdated package dependencies.
-- Add CI for restore, build, tests, migration validation, and code-quality checks.
-- Add Docker/Compose support, structured logging, health checks, and environment-specific configuration/secrets.
-- Define database migration and backup procedures for existing deployments.
-- Add billing, notifications, and audit workflows only after their domain and access requirements are defined.
+- Staff accounts are not linked to Doctor/Nurse records, so issued JWTs do not contain a reliable `staff_id` claim. Staff-specific ownership checks must wait for this link.
+- Two-factor setup and login verification, email confirmation, password reset/recovery, and refresh tokens do not have complete API flows.
+- Patient registration/profile endpoints and ownership rules for medical records and prescriptions are not implemented.
+- Appointment availability/conflict checks and medicine stock updates need protection against concurrent writes.
+- Application handler, API/infrastructure integration, security, and concurrency tests are incomplete.
+- Package versions need a full vulnerability and compatibility review. API versioning, pagination, and an outbox are also future work.
+- Billing, notifications, and audit workflows remain out of scope until their domain and access requirements are defined.
