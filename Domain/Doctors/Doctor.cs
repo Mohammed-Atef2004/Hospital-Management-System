@@ -2,11 +2,15 @@
 using Domain.Doctors.Exceptions;
 using Domain.Entities;
 using Domain.personnel;
+using Domain.SharedKernel;
+using Domain.Doctors.Events;
+using Domain.Doctors.ValueObjects;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Domain.Doctors
 {
 
-    public class Doctor : Staff
+    public class Doctor : Staff, IAggregateRoot
     {
         public string FirstName { get; private set; }
         public string LastName { get; private set; }
@@ -14,6 +18,10 @@ namespace Domain.Doctors
         public string City { get; private set; }
         public string? PhoneNumber { get; private set; }
         public string Specialization { get; private set; }
+
+        private readonly List<DomainEvent> _domainEvents = new();
+        [NotMapped]
+        public IReadOnlyCollection<DomainEvent> DomainEvents => _domainEvents.AsReadOnly();
 
 
         public int? DepartmentId { get; private set; }
@@ -33,14 +41,14 @@ namespace Domain.Doctors
             string specialization
             )
         {
-            if (string.IsNullOrWhiteSpace(firstName)) throw new ArgumentException("First name is required.");
-            if (string.IsNullOrWhiteSpace(lastName)) throw new ArgumentException("Last name is required.");
-
-            FirstName = firstName;
-            LastName = lastName;
-            Address = address;
-            City = city;
-            Specialization = specialization;
+            var name = DoctorName.Create(firstName, lastName);
+            var office = DoctorOffice.Create(address, city);
+            var specialty = DoctorSpecialization.Create(specialization);
+            FirstName = name.FirstName;
+            LastName = name.LastName;
+            Address = office.Address;
+            City = office.City;
+            Specialization = specialty.Value;
         }
 
         // Factory method
@@ -52,60 +60,74 @@ namespace Domain.Doctors
             string specialization
            )
         {
-            return new Doctor(firstName, lastName, address, city, specialization);
+            var doctor = new Doctor(firstName, lastName, address, city, specialization);
+            doctor.AddDomainEvent(new DoctorRegisteredDomainEvent(doctor.FirstName, doctor.LastName, doctor.Specialization));
+            return doctor;
         }
 
         // --- Task-Based Methods (Actions) ---
 
         public void RelocateDoctorOffice(string address, string city)
         {
-            Address = address;
-            City = city;
+            var office = DoctorOffice.Create(address, city);
+            Address = office.Address;
+            City = office.City;
             UpdatedAt = DateTime.UtcNow;
+            AddDomainEvent(new DoctorOfficeRelocatedDomainEvent(Id, Address, City));
         }
 
         public void UpdateContactDetails(string? phoneNumber)
         {
-            PhoneNumber = phoneNumber;
+            PhoneNumber = string.IsNullOrWhiteSpace(phoneNumber) ? null : phoneNumber.Trim();
             UpdatedAt = DateTime.UtcNow;
+            AddDomainEvent(new DoctorContactDetailsUpdatedDomainEvent(Id, PhoneNumber));
         }
 
         public void SetSpecialization(string specialization)
         {
-            if (string.IsNullOrWhiteSpace(specialization))
-                throw new InvalidSpecializationException();
-            Specialization = specialization;
+            Specialization = DoctorSpecialization.Create(specialization).Value;
         }
         public void UpdateSpecialization(string specialization)
         {
-            if (string.IsNullOrWhiteSpace(specialization))
-                throw new InvalidSpecializationException();
-            Specialization = specialization;
+            var previousSpecialization = Specialization;
+            Specialization = DoctorSpecialization.Create(specialization).Value;
             UpdatedAt = DateTime.UtcNow;
+            AddDomainEvent(new DoctorSpecializationChangedDomainEvent(Id, previousSpecialization, Specialization));
         }
 
         public void CorrectName(string firstName, string lastName)
         {
-            FirstName = firstName;
-            LastName = lastName;
-            UpdatedAt = DateTime.Now;
+            var previousName = FullName;
+            var name = DoctorName.Create(firstName, lastName);
+            FirstName = name.FirstName;
+            LastName = name.LastName;
+            UpdatedAt = DateTime.UtcNow;
+            AddDomainEvent(new DoctorNameCorrectedDomainEvent(Id, previousName, FullName));
         }
 
 
         public void SetDepartment(Department department)
         {
-            Department = department;
-            DepartmentId = department.Id;
+            TransferToDepartment(department);
         }
         public void RemoveDepartment()
         {
+            var previousDepartmentId = DepartmentId;
             Department = null;
             DepartmentId = null;
+            UpdatedAt = DateTime.UtcNow;
+            AddDomainEvent(new DoctorTransferredToDepartmentDomainEvent(Id, previousDepartmentId, null));
         }
         public void TransferToDepartment(Department newDepartment)
         {
+            ArgumentNullException.ThrowIfNull(newDepartment);
+            if (!newDepartment.IsActive)
+                throw new InvalidOperationException("A doctor cannot be assigned to an inactive department.");
+            var previousDepartmentId = DepartmentId;
             Department = newDepartment;
             DepartmentId = newDepartment.Id;
+            UpdatedAt = DateTime.UtcNow;
+            AddDomainEvent(new DoctorTransferredToDepartmentDomainEvent(Id, previousDepartmentId, DepartmentId));
         }
 
         //public void GrantSystemAccess(string applicationUserId)
@@ -165,25 +187,35 @@ namespace Domain.Doctors
         // Soft delete
         public void SoftDeleteDoctor(DateTime deletedAt, string? deletedBy = null)
         {
+            if (IsDeleted) throw new InvalidOperationException("Doctor is already inactive.");
             SoftDelete(deletedBy);
             DeletedAt = deletedAt;
+            UpdatedAt = deletedAt;
+            AddDomainEvent(new DoctorDeactivatedDomainEvent(Id));
         }
 
         public void RestoreDoctor()
         {
+            if (!IsDeleted) throw new InvalidOperationException("Doctor is already active.");
             IsDeleted = false;
             DeletedAt = null;
             DeletedBy = null;
+            UpdatedAt = DateTime.UtcNow;
+            AddDomainEvent(new DoctorReactivatedDomainEvent(Id));
         }
         public void Deactivate()
         {
+            if (IsDeleted) throw new InvalidOperationException("Doctor is already inactive.");
             IsDeleted = true;
             UpdatedAt = DateTime.UtcNow;
+            AddDomainEvent(new DoctorDeactivatedDomainEvent(Id));
         }
         public void Reactivate()
         {
+            if (!IsDeleted) throw new InvalidOperationException("Doctor is already active.");
             IsDeleted = false;
             UpdatedAt = DateTime.UtcNow;
+            AddDomainEvent(new DoctorReactivatedDomainEvent(Id));
         }
 
         // --- Helpers ---
@@ -191,6 +223,7 @@ namespace Domain.Doctors
 
         public bool IsAvailableForAppointment(DateTime dateTime)
         {
+            if (IsDeleted) return false;
             var isWithinWorkingHours = Shifts.Any(s => !s.IsDeleted &&
              s.IsActive &&
             dateTime >= s.StartDateTime &&
@@ -199,10 +232,14 @@ namespace Domain.Doctors
 
 
             var hasConflict = Appointments.Any(a =>
-                a.AppointmentDate == dateTime && !a.IsDeleted);
+                a.AppointmentDate == dateTime && !a.IsDeleted && !a.IsCancelled);
 
             return !hasConflict;
         }
+
+        private void AddDomainEvent(DomainEvent domainEvent) => _domainEvents.Add(domainEvent);
+
+        public void ClearDomainEvents() => _domainEvents.Clear();
     }
 }
 

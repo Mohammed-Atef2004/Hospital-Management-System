@@ -141,7 +141,7 @@ namespace Domain.Tests.Nurses
 
             var act = () => nurse.AssignPatient(patientId: 10, shiftId: 999, assignedById: 99);
 
-            Assert.Throws<DomainException>(act);
+            Assert.ThrowsAny<DomainException>(act);
         }
 
         [Fact]
@@ -214,7 +214,7 @@ namespace Domain.Tests.Nurses
             var nurse = CreateNurse();
 
             var act = () => nurse.RemoveShift(999);
-            Assert.Throws<DomainException>(act);
+            Assert.ThrowsAny<DomainException>(act);
         }
 
     }

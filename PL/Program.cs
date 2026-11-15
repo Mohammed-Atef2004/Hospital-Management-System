@@ -3,6 +3,7 @@ using Application;
 using Application.Features.Authentication;
 using Domain.Departments;
 using Domain.Doctors;
+using Domain.Interfaces;
 using Domain.Interfaces.Services;
 using Domain.Medicines;
 using Domain.Nurses;
@@ -103,6 +104,7 @@ namespace Presentation
             builder.Services.AddScoped<IUserRepository, UserRepository>();
             builder.Services.AddScoped<IAuthTokenService, JwtTokenService>();
             builder.Services.AddHttpContextAccessor();
+            builder.Services.AddScoped<IAppointmentRepository, AppointmentRepository>();
 
             // ================== MediatR ==================
             builder.Services.AddMediatR(typeof(ApplicationAssembly));
@@ -117,32 +119,6 @@ namespace Presentation
             builder.Services.AddTransient(typeof(IPipelineBehavior<,>), typeof(ValidationBehavior<,>));
             builder.Services.AddTransient(typeof(IPipelineBehavior<,>), typeof(TransactionBehavior<,>));
             builder.Services.AddAutoMapper(typeof(ApplicationAssembly).Assembly);
-
-            // ================== JWT Authentication ==================
-            //var jwtSection = builder.Configuration.GetSection("JWT");
-            //var signingKey = Encoding.UTF8.GetBytes(jwtSection["SigningKey"]);
-
-            //builder.Services.AddAuthentication(options =>
-            //{
-            //    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
-            //    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
-            //})
-            //.AddJwtBearer(options =>
-            //{
-            //    options.RequireHttpsMetadata = false;
-            //    options.SaveToken = true;
-            //    options.TokenValidationParameters = new TokenValidationParameters
-            //    {
-            //        ValidateIssuer = true,
-            //        ValidateAudience = true,
-            //        ValidateLifetime = true,
-            //        ValidateIssuerSigningKey = true,
-
-            //        ValidIssuer = jwtSection["Issuer"],
-            //        ValidAudience = jwtSection["Audience"],
-            //        IssuerSigningKey = new SymmetricSecurityKey(signingKey)
-            //    };
-            //});
 
             var app = builder.Build();
             app.UseMiddleware<ExceptionHandlingMiddleware>();
