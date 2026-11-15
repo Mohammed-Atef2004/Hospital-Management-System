@@ -1,11 +1,11 @@
-﻿namespace Domain.Users
-{
-    public class JWTOptions
-    {
-        public string Issuer { get; set; }
-        public string Audience { get; set; }
-        public string lifetime { get; set; }
-        public string SigningKey { get; set; }
-    }
+namespace Domain.Users;
 
+public sealed class JWTOptions
+{
+    public const string SectionName = "JWT";
+
+    public string Issuer { get; set; } = string.Empty;
+    public string Audience { get; set; } = string.Empty;
+    public int LifetimeSeconds { get; set; } = 3600;
+    public string SigningKey { get; set; } = string.Empty;
 }

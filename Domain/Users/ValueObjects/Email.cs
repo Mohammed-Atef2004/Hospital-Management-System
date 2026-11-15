@@ -1,5 +1,5 @@
 using System.Text.RegularExpressions;
-using Domain.Common.Domain.Common;
+using Domain.Common;
 using  Domain.SharedKernel;
 using  Domain.Users.Errors;
 namespace  Domain.Users.ValueObjects;
@@ -32,7 +32,7 @@ public sealed class Email : ValueObject
         return Result<Email>.Success(new Email(trimmed.ToLowerInvariant()));
     }
 
-    protected override IEnumerable<object> GetEqualityComponents()
+    protected override IEnumerable<object?> GetEqualityComponents()
     {
         yield return Value;
     }

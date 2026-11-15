@@ -106,6 +106,7 @@ The solution follows **Clean Architecture** with strict layer separation and zer
 - `DoctorAppointmentTests` — booking past dates, unavailable doctors
 - `DoctorStateTests` — activate/deactivate state machine
 - `DepartmentTests` — department lifecycle rules
+- `UserAuthenticationTests` and `UserValueObjectTests` — authentication rules, lockout, profile values, and security state
 
 ---
 
@@ -119,7 +120,7 @@ The solution follows **Clean Architecture** with strict layer separation and zer
 | CQRS | MediatR 11 |
 | Validation | FluentValidation 12 |
 | Mapping | AutoMapper 12 |
-| Auth (planned) | ASP.NET Core Identity + JWT Bearer |
+| Authentication | ASP.NET Core Identity + JWT Bearer |
 | Testing | xUnit + FluentAssertions |
 | Architecture | DDD + Clean Architecture + CQRS |
 
@@ -150,6 +151,13 @@ dotnet run --project PL
 ```
 
 The API will be available at `https://localhost:7281` with Swagger UI at `/swagger`.
+
+### Authentication
+
+- `POST /api/auth/register` creates a patient account and returns a JWT.
+- `POST /api/auth/login` accepts a username or email and returns a JWT.
+- All other API endpoints require a valid bearer token.
+- Development uses a development-only signing key from `appsettings.Development.json`. Set `JWT__SigningKey` to a private value of at least 32 UTF-8 bytes in every non-development environment.
 
 ### Connection String
 

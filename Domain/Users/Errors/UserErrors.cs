@@ -21,7 +21,13 @@ public static class UserErrors
         new("User.AlreadyActive", "This user account is already active.");
 
     public static readonly Error InvalidIdentityReference =
-        new("User.InvalidIdentityReference", "The provided identity ID is null or empty.");
+        new("User.InvalidIdentityReference", "The provided identity ID is required.");
+
+    public static readonly Error InvalidRole =
+        new("User.InvalidRole", "The requested user role is invalid.");
+
+    public static readonly Error InvalidReason =
+        new("User.InvalidReason", "A reason is required for this operation.");
 
     public static readonly Error CannotDeleteSuperAdmin =
         new("User.CannotDeleteSuperAdmin", "SuperAdmin accounts cannot be deleted.");
@@ -53,7 +59,13 @@ public static class UserErrors
             new("User.Security.TwoFactorNotEnabled", "Two-factor authentication is not enabled.");
 
         public static readonly Error InvalidTwoFactorSecret =
-            new("User.Security.InvalidTwoFactorSecret", "Two-factor secret cannot be empty.");
+            new("User.Security.InvalidTwoFactorSecret", "Two-factor secret must be a valid Base32 secret.");
+
+        public static readonly Error AccountNotLocked =
+            new("User.Security.AccountNotLocked", "The account is not locked.");
+
+        public static readonly Error InvalidPasswordHash =
+            new("User.Security.InvalidPasswordHash", "A password hash is required.");
 
         public static readonly Error PasswordAlreadyUsed =
             new("User.Security.PasswordAlreadyUsed",

@@ -1,5 +1,5 @@
-﻿using Domain.Common.Domain.Common;
-using  Domain.SharedKernel;
+using Domain.Common;
+using Domain.SharedKernel;
 using  Domain.Users.Errors;
 using System;
 using System.Collections.Generic;
@@ -45,7 +45,7 @@ namespace  Domain.Users.ValueObjects
             return Result<Username>.Success(new Username(trimmed.ToLowerInvariant()));
         }
 
-        protected override IEnumerable<object> GetEqualityComponents()
+        protected override IEnumerable<object?> GetEqualityComponents()
         {
             yield return Value; // already lowercase
         }

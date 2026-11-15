@@ -1,4 +1,4 @@
-﻿using Domain.Common.Domain.Common;
+using Domain.Common;
 using  Domain.SharedKernel;
 using  Domain.Users.Errors;
 using System;
@@ -41,7 +41,7 @@ namespace  Domain.Users.ValueObjects
             return Result<PhoneNumber>.Success(new PhoneNumber(normalized));
         }
 
-        protected override IEnumerable<object> GetEqualityComponents()
+        protected override IEnumerable<object?> GetEqualityComponents()
         {
             yield return Value;
         }
