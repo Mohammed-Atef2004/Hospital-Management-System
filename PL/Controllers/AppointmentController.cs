@@ -10,6 +10,7 @@ using Application.Features.Appointments.Queries.GetPatientAppointments;
 using Application.Features.Appointments.Queries.GetUpcomingAppointments;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.VisualStudio.Web.CodeGenerators.Mvc.Templates.Blazor;
 using System;
 using static System.Net.Mime.MediaTypeNames;
@@ -24,7 +25,8 @@ using Application.Features.Appointments.Commands.UpdatePatient;
 namespace API.Controllers;
 
 [ApiController]
-[Route("api/[controller]")]
+[Route("api/appointments")]
+[Authorize(Policy = "CareProviders")]
 public class AppointmentsController : ControllerBase
 {
     private readonly IMediator _mediator;

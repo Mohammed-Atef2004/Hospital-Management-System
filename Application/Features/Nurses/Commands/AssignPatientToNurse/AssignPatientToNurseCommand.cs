@@ -1,4 +1,5 @@
-﻿using MediatR;
+using Application.Common;
+using MediatR;
 
 namespace Application.Features.Nurses.Commands.AssignPatientToNurse
 {
@@ -6,6 +7,6 @@ namespace Application.Features.Nurses.Commands.AssignPatientToNurse
             int patientId,
             int nurseId,
             int shiftId
-       ) : IRequest<int>;
+       ) : ICommandRequest<int>;
 
 }

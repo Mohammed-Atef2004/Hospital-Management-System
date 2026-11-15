@@ -1,4 +1,5 @@
-﻿using MediatR;
+using Application.Common;
+using MediatR;
 
 namespace Application.Features.Doctors.Commands.Register
 {
@@ -8,5 +9,5 @@ namespace Application.Features.Doctors.Commands.Register
     string Address,
     string City,
     string Specialization
-) : IRequest<int>;
+) : ICommandRequest<int>;
 }

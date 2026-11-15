@@ -8,11 +8,13 @@ using Application.Features.Doctors.Queries.GetAll;
 using Application.Features.Doctors.Queries.GetById;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
 
 namespace WebApi.Controllers
 {
     [ApiController]
-    [Route("api/[controller]")]
+    [Route("api/doctors")]
+    [Authorize(Policy = "Administrative")]
     public class DoctorsController : ControllerBase
     {
         private readonly IMediator _mediator;

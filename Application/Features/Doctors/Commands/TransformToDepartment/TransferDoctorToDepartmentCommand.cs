@@ -1,4 +1,5 @@
-﻿using MediatR;
+using Application.Common;
+using MediatR;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -10,5 +11,5 @@ namespace Application.Features.Doctors.Commands.TransformToDepartment
     public record TransferDoctorToDepartmentCommand(
      int DoctorId,
      int TargetDepartmentId
-    ) : IRequest;
+    ) : ICommandRequest<Unit>;
 }

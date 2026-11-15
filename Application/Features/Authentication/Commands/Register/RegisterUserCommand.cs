@@ -1,3 +1,4 @@
+using Application.Common;
 using Domain.SharedKernel;
 using MediatR;
 
@@ -8,4 +9,4 @@ public sealed record RegisterUserCommand(
     string Username,
     string FirstName,
     string LastName,
-    string Password) : IRequest<Result<AuthResponse>>;
+    string Password) : ICommandRequest<Result<AuthResponse>>;

@@ -1,4 +1,5 @@
-﻿using MediatR;
+using Application.Common;
+using MediatR;
 
 namespace Application.Features.Nurses.Commands.RecordVitalSigns
 {
@@ -11,5 +12,5 @@ namespace Application.Features.Nurses.Commands.RecordVitalSigns
    int DiastolicBloodPressure,
    int RespiratoryRate,
    int OxygenSaturation
-) : IRequest<int>;
+) : ICommandRequest<int>;
 }

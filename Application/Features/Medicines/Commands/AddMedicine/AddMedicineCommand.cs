@@ -1,4 +1,5 @@
-﻿using MediatR;
+using Application.Common;
+using MediatR;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -11,5 +12,5 @@ namespace Application.Features.Medicines.Commands.AddMedicine
     decimal Price,
     int Stock,
     DateTime ExpiryDate,
-    string? CreatedBy) : IRequest<int>;
+    string? CreatedBy) : ICommandRequest<int>;
 }

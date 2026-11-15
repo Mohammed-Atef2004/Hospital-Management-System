@@ -95,7 +95,7 @@ The test project currently targets .NET 9 while the application projects target 
 
 ### Prerequisites
 
-- .NET 9 SDK (builds the .NET 8 projects and the .NET 9 test project).
+- .NET 8 SDK (all solution projects target .NET 8).
 - SQL Server, local or containerized.
 - EF Core CLI (`dotnet-ef`) compatible with EF Core 9 for migration commands.
 
@@ -118,6 +118,18 @@ dotnet run --project PL --launch-profile http
 The HTTP development profile serves the API at `http://localhost:5277` and Swagger at `http://localhost:5277/swagger`.
 
 The repository currently contains a single `InitialCreate` migration. Check the target database schema before applying it to an existing database; the initial migration is intended to establish the schema and may conflict with tables created outside EF migrations.
+
+### Operations
+
+- `/health` is an anonymous process health endpoint. Configure the connection string and JWT signing key through environment variables or a secret store outside development.
+- API logs use structured JSON on standard output.
+- `compose.yaml` starts SQL Server and the API. Set `MSSQL_SA_PASSWORD` and `JWT_SIGNING_KEY` (at least 32 bytes) before running `docker compose up --build`. The SQL data lives in the `sqlserver-data` volume. Apply migrations before using the API.
+- Back up the SQL Server database and the data-protection key ring together. The key ring encrypts persisted two-factor secrets; losing it makes those secrets unreadable. Test restores before applying migrations to an existing deployment.
+- CI restores, builds, and runs the solution tests for pull requests and pushes to `main` or `master`.
+
+### Authorization and routes
+
+Administrative operations under departments, doctor management, and shifts require the `Admin` role. Appointments require `Admin` or `Doctor`; nurse operations and medicine access require `Admin`, `Doctor`, or `Nurse`, while medicine stock changes require `Admin`. Authentication endpoints are limited to 10 requests per minute per client IP. Route prefixes use lowercase names (`/api/doctors`, `/api/appointments`, `/api/medicines`, `/api/shifts`). Patient-owned clinical data endpoints are not exposed yet; add them only together with a persisted identity-to-patient link and ownership checks.
 
 ### Authentication endpoints
 

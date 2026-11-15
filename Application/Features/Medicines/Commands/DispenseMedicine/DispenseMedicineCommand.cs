@@ -1,4 +1,5 @@
-﻿using MediatR;
+using Application.Common;
+using MediatR;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -12,5 +13,5 @@ namespace Application.Features.Medicines.Commands.DispenseMedicine
         int Quantity,
         int PharmacistId,
         int PtientId
-    ): IRequest<int>;
+    ): ICommandRequest<int>;
 }

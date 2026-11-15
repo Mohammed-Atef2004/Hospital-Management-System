@@ -1,4 +1,5 @@
-﻿using MediatR;
+using Application.Common;
+using MediatR;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -11,5 +12,5 @@ namespace Application.Features.Doctors.Commands.RelocateDoctorOffice
     int DoctorId,
     string NewAddress,
     string NewCity
-    ) : IRequest;
+    ) : ICommandRequest<Unit>;
 }

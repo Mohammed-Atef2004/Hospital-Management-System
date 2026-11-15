@@ -12,11 +12,13 @@ using Application.Features.Nurses.Queries.GetNurseById;
 using Application.Features.Nurses.Queries.GetShiftAssignedPatients;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
 
 namespace API.Controllers
 {
     [ApiController]
     [Route("api/nurses")]
+    [Authorize(Policy = "Clinical")]
     public class NurseController : ControllerBase
     {
         private readonly IMediator _mediator;

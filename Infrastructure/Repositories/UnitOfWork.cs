@@ -9,14 +9,12 @@ using Domain.Repositories;
 using Domain.Schedules;
 using Infastructure.Presistence.Database;
 using Infrastructure.Repositories;
-using MediatR;
 
 namespace Infastructure.Repositories
 {
     public class UnitOfWork : IUnitOfWork
     {
         private readonly ApplicationDbContext _context;
-        private readonly IMediator _mediator;
         public IPatientRepository Patient { get; private set; }
         public IDepartmentRepository Department { get; private set; }
         public IDoctorRepository Doctor { get; private set; }
@@ -27,10 +25,9 @@ namespace Infastructure.Repositories
         public IAssignPatientRepository PatientAssignment
         { get; private set; }
 
-        public UnitOfWork(ApplicationDbContext context, IMediator mediator)
+        public UnitOfWork(ApplicationDbContext context)
         {
             _context = context;
-            _mediator = mediator;
             Patient = new PatientRepository(_context);
             Department = new DepartmentRepository(_context);
             Doctor = new DoctorRepository(_context);
@@ -44,19 +41,7 @@ namespace Infastructure.Repositories
 
         public async Task<int> CompleteAsync()
         {
-            var aggregates = _context.ChangeTracker
-                .Entries<Domain.SharedKernel.IAggregateRoot>()
-                .Select(entry => entry.Entity)
-                .Where(entity => entity.DomainEvents.Count > 0)
-                .ToArray();
-            var domainEvents = aggregates.SelectMany(aggregate => aggregate.DomainEvents).ToArray();
-
             var result = await _context.SaveChangesAsync();
-            foreach (var domainEvent in domainEvents)
-                await _mediator.Publish(domainEvent);
-            foreach (var aggregate in aggregates)
-                aggregate.ClearDomainEvents();
-
             return result;
 
         }

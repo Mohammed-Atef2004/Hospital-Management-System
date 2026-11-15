@@ -1,4 +1,5 @@
-﻿using MediatR;
+using Application.Common;
+using MediatR;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -9,5 +10,5 @@ namespace Application.Features.Doctors.Commands.RevokeSystemAccess
 {
     public record RevokeDoctorSystemAccessCommand(
     int DoctorId
-    ) : IRequest;
+    ) : ICommandRequest<Unit>;
 }

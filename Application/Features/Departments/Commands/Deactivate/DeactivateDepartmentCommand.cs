@@ -1,4 +1,5 @@
-﻿using MediatR;
+using Application.Common;
+using MediatR;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -7,5 +8,5 @@ using System.Threading.Tasks;
 
 namespace Application.Features.Departments.Commands.Deactivate
 {
-    public record DeactivateDepartmentCommand(int Id) : IRequest;
+    public record DeactivateDepartmentCommand(int Id) : ICommandRequest<Unit>;
 }

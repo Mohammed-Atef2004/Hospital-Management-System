@@ -1,6 +1,7 @@
-﻿using MediatR;
+using Application.Common;
+using MediatR;
 
 namespace Application.Features.Shifts.Commands.CreateShift
 {
-    public record CreateShiftCommand(int StaffId, DateTime start, DateTime end) : IRequest<int>;
+    public record CreateShiftCommand(int StaffId, DateTime start, DateTime end) : ICommandRequest<int>;
 }

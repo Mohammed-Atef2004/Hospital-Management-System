@@ -1,0 +1,21 @@
+name: CI
+
+on:
+  push:
+    branches: [master, main]
+  pull_request:
+    branches: [master, main]
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+      - run: dotnet restore Hospital-Management-System.sln
+      - run: dotnet build Hospital-Management-System.sln --no-restore --configuration Release
+      - run: dotnet test Hospital-Management-System.sln --no-build --configuration Release
+      - run: dotnet tool install --global dotnet-ef --version 9.0.9
+      - run: dotnet ef migrations has-pending-model-changes --project Infrastructure --startup-project PL --context ApplicationDbContext

@@ -1,4 +1,5 @@
-﻿using Application.Enums;
+using Application.Common;
+using Application.Enums;
 using MediatR;
 using System;
 using System.Collections.Generic;
@@ -15,5 +16,5 @@ namespace Application.Features.Medicines.Commands.AdjustMedicineStock
     string Reason,
     //string Pharmacist
     int PharmacistId
-        ) : IRequest<int>;
+        ) : ICommandRequest<int>;
 }
