@@ -11,11 +11,11 @@ namespace Application.Features.Doctors.Commands.Register
     {
         public RegisterNewDoctorCommandValidator()
         {
-            RuleFor(x => x.FirstName).NotEmpty().WithMessage("First name is required.");
-            RuleFor(x => x.LastName).NotEmpty().WithMessage("Last name is required.");
-            RuleFor(x => x.Address).NotEmpty().WithMessage("Address is required.");
-            RuleFor(x => x.City).NotEmpty().WithMessage("City is required.");
-            RuleFor(x => x.Specialization).NotEmpty().WithMessage("Specialization is required.");
+            RuleFor(x => x.FirstName).NotEmpty().WithMessage("First name is required.").MaximumLength(50);
+            RuleFor(x => x.LastName).NotEmpty().WithMessage("Last name is required.").MaximumLength(50);
+            RuleFor(x => x.Address).NotEmpty().WithMessage("Address is required.").MaximumLength(250);
+            RuleFor(x => x.City).NotEmpty().WithMessage("City is required.").MaximumLength(50);
+            RuleFor(x => x.Specialization).NotEmpty().WithMessage("Specialization is required.").MaximumLength(100);
         }
 
     }

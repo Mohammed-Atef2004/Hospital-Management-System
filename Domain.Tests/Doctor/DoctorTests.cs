@@ -1,4 +1,5 @@
-﻿using FluentAssertions;
+using FluentAssertions;
+using Domain.SharedKernel;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -56,7 +57,45 @@ namespace Domain.Tests.Doctor
             Action act = () => Doctors.Doctor.Create(firstName, lastName, "Address", "City", "Spec");
 
             // Assert
-            act.Should().Throw<ArgumentException>();
+            act.Should().Throw<DomainException>();
         }
+
+        [Theory]
+        [InlineData("", "City")]
+        [InlineData("Address", " ")]
+        public void Create_WithInvalidOffice_ShouldThrowDomainException(string address, string city)
+        {
+            Action act = () => Doctors.Doctor.Create("Ahmed", "Ali", address, city, "Spec");
+            act.Should().Throw<DomainException>();
+        }
+
+        [Fact]
+        public void SetSpecialization_ShouldUseTheValidatedUpdateBehavior()
+        {
+            var doctor = Doctors.Doctor.Create("Ahmed", "Ali", "Address", "Cairo", "Cardiology");
+            doctor.ClearDomainEvents();
+
+            doctor.SetSpecialization("Neurology");
+
+            doctor.Specialization.Should().Be("Neurology");
+            doctor.DomainEvents.Should().ContainSingle()
+                .Which.Should().BeOfType<Domain.Doctors.Events.DoctorSpecializationChangedDomainEvent>();
+            Action act = () => doctor.SetSpecialization(" ");
+            act.Should().Throw<DomainException>();
+        }
+        [Fact]
+        public void Create_WithValuesLongerThanDatabaseColumns_ShouldThrowDomainException()
+        {
+            Action name = () => Doctors.Doctor.Create(new string('A', 51), "Ali", "Address", "City", "Spec");
+            Action office = () => Doctors.Doctor.Create("Ahmed", "Ali", new string('A', 251), "City", "Spec");
+            Action city = () => Doctors.Doctor.Create("Ahmed", "Ali", "Address", new string('C', 51), "Spec");
+            Action specialty = () => Doctors.Doctor.Create("Ahmed", "Ali", "Address", "City", new string('S', 101));
+
+            name.Should().Throw<DomainException>();
+            office.Should().Throw<DomainException>();
+            city.Should().Throw<DomainException>();
+            specialty.Should().Throw<DomainException>();
+        }
+
     }
 }

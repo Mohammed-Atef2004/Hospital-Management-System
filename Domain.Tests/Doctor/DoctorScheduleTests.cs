@@ -1,21 +1,54 @@
-﻿namespace Domain.Tests.Doctor
+using Domain.SharedKernel;
+using FluentAssertions;
+
+namespace Domain.Tests.Doctor;
+
+public class DoctorScheduleTests
 {
-    public class DoctorScheduleTests
+    [Fact]
+    public void IsAvailableForAppointment_WhenInsideActiveShift_ShouldReturnTrue()
     {
-        //[Fact]
-        //public void AddSchedule_DuplicateTime_ShouldThrowInvalidOperationException()
-        //{
-        //    // Arrange
-        //    var doctor = Domain.Entities.Doctor.Create("Ahmed", "Ali", "Addr", "City", "Spec");
-        //    var schedule = new Schedule { DayofWeek = DayOfWeek.Monday, StartTime = new TimeSpan(10, 0, 0), EndTime = new TimeSpan(12, 0, 0) };
-        //    doctor.AddSchedule(schedule);
+        var doctor = CreateDoctor();
+        var start = DateTime.UtcNow.AddDays(1);
+        doctor.AddShift(start, start.AddHours(2));
 
-        //    // Act
-        //    Action act = () => doctor.AddSchedule(schedule);
-
-        //    // Assert
-        //    act.Should().Throw<InvalidOperationException>()
-        //       .WithMessage("Schedule already exists for this time.");
-        //}
+        doctor.IsAvailableForAppointment(start.AddMinutes(30)).Should().BeTrue();
     }
+
+    [Fact]
+    public void IsAvailableForAppointment_AtShiftEnd_ShouldReturnFalse()
+    {
+        var doctor = CreateDoctor();
+        var start = DateTime.UtcNow.AddDays(1);
+        var end = start.AddHours(2);
+        doctor.AddShift(start, end);
+
+        doctor.IsAvailableForAppointment(end).Should().BeFalse();
+    }
+
+    [Fact]
+    public void IsAvailableForAppointment_WhenShiftHasBeenRemoved_ShouldReturnFalse()
+    {
+        var doctor = CreateDoctor();
+        var start = DateTime.UtcNow.AddDays(1);
+        var shift = doctor.AddShift(start, start.AddHours(2));
+        doctor.RemoveShift(shift.Id);
+
+        doctor.IsAvailableForAppointment(start.AddMinutes(30)).Should().BeFalse();
+    }
+
+    [Fact]
+    public void TransferToInactiveDepartment_ShouldThrowDomainException()
+    {
+        var doctor = CreateDoctor();
+        var department = Domain.Departments.Department.Register("Cardiology", "Heart care");
+        department.Deactivate();
+
+        Action act = () => doctor.TransferToDepartment(department);
+
+        act.Should().Throw<DomainException>();
+    }
+
+    private static Domain.Doctors.Doctor CreateDoctor()
+        => Domain.Doctors.Doctor.Create("Ahmed", "Ali", "Addr", "City", "Spec");
 }

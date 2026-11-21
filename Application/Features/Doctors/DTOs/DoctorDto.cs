@@ -11,6 +11,7 @@ namespace Application.Features.Doctors.DTOs
      string FullName,
      string Specialization,
      string? DepartmentName,
-     string City
+     string City,
+     bool IsActive
  );
 }

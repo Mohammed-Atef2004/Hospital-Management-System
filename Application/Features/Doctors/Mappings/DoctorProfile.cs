@@ -14,7 +14,8 @@ namespace Application.Features.Doctors.Mappings
             {
                 CreateMap<Doctor, DTOs.DoctorDto>()
                     .ForMember(dest => dest.FullName, opt => opt.MapFrom(src => $"{src.FirstName} {src.LastName}"))
-                    .ForMember(dest => dest.DepartmentName, opt => opt.MapFrom(src => src.Department != null ? src.Department.Name : null));
+                    .ForMember(dest => dest.DepartmentName, opt => opt.MapFrom(src => src.Department != null ? src.Department.Name : null))
+                    .ForMember(dest => dest.IsActive, opt => opt.MapFrom(src => !src.IsDeleted));
         }
     }
 }

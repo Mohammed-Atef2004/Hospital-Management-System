@@ -69,6 +69,7 @@ namespace Domain.Doctors
 
         public void RelocateDoctorOffice(string address, string city)
         {
+            EnsureActive();
             var office = DoctorOffice.Create(address, city);
             Address = office.Address;
             City = office.City;
@@ -78,6 +79,9 @@ namespace Domain.Doctors
 
         public void UpdateContactDetails(string? phoneNumber)
         {
+            EnsureActive();
+            if (phoneNumber?.Trim().Length > 20)
+                throw new DomainException("Doctor phone number cannot exceed 20 characters.");
             PhoneNumber = string.IsNullOrWhiteSpace(phoneNumber) ? null : phoneNumber.Trim();
             UpdatedAt = DateTime.UtcNow;
             AddDomainEvent(new DoctorContactDetailsUpdatedDomainEvent(Id, PhoneNumber));
@@ -85,10 +89,11 @@ namespace Domain.Doctors
 
         public void SetSpecialization(string specialization)
         {
-            Specialization = DoctorSpecialization.Create(specialization).Value;
+            UpdateSpecialization(specialization);
         }
         public void UpdateSpecialization(string specialization)
         {
+            EnsureActive();
             var previousSpecialization = Specialization;
             Specialization = DoctorSpecialization.Create(specialization).Value;
             UpdatedAt = DateTime.UtcNow;
@@ -97,6 +102,7 @@ namespace Domain.Doctors
 
         public void CorrectName(string firstName, string lastName)
         {
+            EnsureActive();
             var previousName = FullName;
             var name = DoctorName.Create(firstName, lastName);
             FirstName = name.FirstName;
@@ -112,6 +118,7 @@ namespace Domain.Doctors
         }
         public void RemoveDepartment()
         {
+            EnsureActive();
             var previousDepartmentId = DepartmentId;
             Department = null;
             DepartmentId = null;
@@ -120,9 +127,10 @@ namespace Domain.Doctors
         }
         public void TransferToDepartment(Department newDepartment)
         {
+            EnsureActive();
             ArgumentNullException.ThrowIfNull(newDepartment);
             if (!newDepartment.IsActive)
-                throw new InvalidOperationException("A doctor cannot be assigned to an inactive department.");
+                throw new DomainException("A doctor cannot be assigned to an inactive department.");
             var previousDepartmentId = DepartmentId;
             Department = newDepartment;
             DepartmentId = newDepartment.Id;
@@ -168,8 +176,11 @@ namespace Domain.Doctors
         // Appointment management
         public void BookAppointment(Appointment appointment, DateTime currentTime)
         {
+            ArgumentNullException.ThrowIfNull(appointment);
+            if (appointment.DoctorId != Id)
+                throw new DomainException("The appointment belongs to a different doctor.");
             if (appointment.AppointmentDate < currentTime)
-                throw new InvalidOperationException("Cannot book an appointment in the past.");
+                throw new DomainException("Cannot book an appointment in the past.");
 
             if (!IsAvailableForAppointment(appointment.AppointmentDate))
                 throw new DoctorNotAvailableException(appointment.AppointmentDate);
@@ -187,7 +198,7 @@ namespace Domain.Doctors
         // Soft delete
         public void SoftDeleteDoctor(DateTime deletedAt, string? deletedBy = null)
         {
-            if (IsDeleted) throw new InvalidOperationException("Doctor is already inactive.");
+            if (IsDeleted) throw new DomainException("Doctor is already inactive.");
             SoftDelete(deletedBy);
             DeletedAt = deletedAt;
             UpdatedAt = deletedAt;
@@ -196,24 +207,18 @@ namespace Domain.Doctors
 
         public void RestoreDoctor()
         {
-            if (!IsDeleted) throw new InvalidOperationException("Doctor is already active.");
-            IsDeleted = false;
-            DeletedAt = null;
-            DeletedBy = null;
-            UpdatedAt = DateTime.UtcNow;
-            AddDomainEvent(new DoctorReactivatedDomainEvent(Id));
+            Reactivate();
         }
         public void Deactivate()
         {
-            if (IsDeleted) throw new InvalidOperationException("Doctor is already inactive.");
-            IsDeleted = true;
-            UpdatedAt = DateTime.UtcNow;
-            AddDomainEvent(new DoctorDeactivatedDomainEvent(Id));
+            SoftDeleteDoctor(DateTime.UtcNow);
         }
         public void Reactivate()
         {
-            if (!IsDeleted) throw new InvalidOperationException("Doctor is already active.");
+            if (!IsDeleted) throw new DomainException("Doctor is already active.");
             IsDeleted = false;
+            DeletedAt = null;
+            DeletedBy = null;
             UpdatedAt = DateTime.UtcNow;
             AddDomainEvent(new DoctorReactivatedDomainEvent(Id));
         }
@@ -225,9 +230,9 @@ namespace Domain.Doctors
         {
             if (IsDeleted) return false;
             var isWithinWorkingHours = Shifts.Any(s => !s.IsDeleted &&
-             s.IsActive &&
-            dateTime >= s.StartDateTime &&
-            dateTime <= s.EndDateTime);
+                s.IsActive &&
+                dateTime >= s.StartDateTime &&
+                dateTime < s.EndDateTime);
             if (!isWithinWorkingHours) return false;
 
 
@@ -238,6 +243,12 @@ namespace Domain.Doctors
         }
 
         private void AddDomainEvent(DomainEvent domainEvent) => _domainEvents.Add(domainEvent);
+
+        private void EnsureActive()
+        {
+            if (IsDeleted)
+                throw new DomainException("An inactive doctor cannot be modified.");
+        }
 
         public void ClearDomainEvents() => _domainEvents.Clear();
     }
