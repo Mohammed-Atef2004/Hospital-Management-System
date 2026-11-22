@@ -67,6 +67,9 @@ public static class UserErrors
         public static readonly Error TwoFactorNotEnabled =
             new("User.Security.TwoFactorNotEnabled", "Two-factor authentication is not enabled.");
 
+        public static readonly Error TwoFactorSetupNotStarted =
+            new("User.Security.TwoFactorSetupNotStarted", "Two-factor setup has not been started for this account.");
+
         public static readonly Error InvalidTwoFactorSecret =
             new("User.Security.InvalidTwoFactorSecret", "Two-factor secret must be a valid Base32 secret.");
 

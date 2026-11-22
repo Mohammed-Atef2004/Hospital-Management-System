@@ -31,6 +31,7 @@ namespace Infastructure.Presistence.Database
         public DbSet<Shift> Shifts { get; set; }
         public DbSet<Staff> Staff { get; set; }
         public DbSet<User> DomainUsers { get; set; }
+        public DbSet<RefreshToken> RefreshTokens { get; set; }
 
         public ApplicationDbContext(
             DbContextOptions<ApplicationDbContext> options,
@@ -55,6 +56,11 @@ namespace Infastructure.Presistence.Database
                 var protector = _dataProtectionProvider.CreateProtector("HospitalManagement.UserTwoFactorSecret.v1");
                 modelBuilder.Entity<User>()
                     .Property(user => user.TwoFactorSecret)
+                    .HasConversion(new ValueConverter<string?, string?>(
+                        value => value == null ? null : protector.Protect(value),
+                        value => value == null ? null : protector.Unprotect(value)));
+                modelBuilder.Entity<User>()
+                    .Property(user => user.PendingTwoFactorSecret)
                     .HasConversion(new ValueConverter<string?, string?>(
                         value => value == null ? null : protector.Protect(value),
                         value => value == null ? null : protector.Unprotect(value)));

@@ -1,5 +1,6 @@
 using Application.Features.Authentication;
 using Domain.SharedKernel;
+using Domain.Repositories;
 using Domain.Users;
 using MediatR;
 using Microsoft.AspNetCore.Identity;
@@ -12,17 +13,26 @@ public sealed class LoginUserCommandHandler : IRequestHandler<LoginUserCommand, 
     private readonly IUserRepository _users;
     private readonly Application.Common.ITransactionManager _transactions;
     private readonly IAuthTokenService _tokens;
+    private readonly ITwoFactorCodeService _twoFactorCodes;
+    private readonly IRefreshTokenService _refreshTokens;
+    private readonly IUnitOfWork _unitOfWork;
 
     public LoginUserCommandHandler(
         UserManager<IdentityUser> userManager,
         IUserRepository users,
         Application.Common.ITransactionManager transactions,
-        IAuthTokenService tokens)
+        IAuthTokenService tokens,
+        ITwoFactorCodeService twoFactorCodes,
+        IRefreshTokenService refreshTokens,
+        IUnitOfWork unitOfWork)
     {
         _userManager = userManager;
         _users = users;
         _transactions = transactions;
         _tokens = tokens;
+        _twoFactorCodes = twoFactorCodes;
+        _refreshTokens = refreshTokens;
+        _unitOfWork = unitOfWork;
     }
 
     public async Task<Result<AuthResponse>> Handle(LoginUserCommand request, CancellationToken cancellationToken)
@@ -47,18 +57,28 @@ public sealed class LoginUserCommandHandler : IRequestHandler<LoginUserCommand, 
             return Result<AuthResponse>.Failure(AuthenticationErrors.InvalidCredentials);
         }
 
-        // Never issue an access token for an account with 2FA enabled until a verification flow is supplied.
-        if (user.IsTwoFactorEnabled)
-            return Result<AuthResponse>.Failure(AuthenticationErrors.TwoFactorVerificationRequired);
+        if (user.IsTwoFactorEnabled &&
+            (string.IsNullOrWhiteSpace(user.TwoFactorSecret) ||
+             !_twoFactorCodes.VerifyCode(user.TwoFactorSecret, request.TwoFactorCode, DateTimeOffset.UtcNow)))
+        {
+            var failedTwoFactor = user.RecordFailedLogin(request.IpAddress);
+            if (failedTwoFactor.IsSuccess)
+                await _transactions.SaveChangesAsync(cancellationToken);
+            return Result<AuthResponse>.Failure(AuthenticationErrors.InvalidCredentials);
+        }
 
         var loginResult = user.RecordSuccessfulLogin(request.IpAddress);
         if (loginResult.IsFailure)
             return Result<AuthResponse>.Failure(AuthenticationErrors.InvalidCredentials);
 
+        var refreshToken = _refreshTokens.Create();
+        await _unitOfWork.RefreshTokens.AddAsync(
+            Domain.Users.RefreshToken.Issue(user.Id, refreshToken.TokenHash, refreshToken.ExpiresAtUtc));
         await _transactions.SaveChangesAsync(cancellationToken);
         var (token, expiresAtUtc) = _tokens.CreateToken(user);
         return Result<AuthResponse>.Success(new AuthResponse(
-            token, expiresAtUtc, user.Id, user.Username.Value, user.Role.ToString()));
+            token, expiresAtUtc, user.Id, user.Username.Value, user.Role.ToString(),
+            refreshToken.Token, refreshToken.ExpiresAtUtc));
     }
 
 }

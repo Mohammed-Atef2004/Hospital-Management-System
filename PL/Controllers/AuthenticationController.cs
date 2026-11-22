@@ -1,10 +1,13 @@
 using Application.Features.Authentication.Commands.Login;
 using Application.Features.Authentication.Commands.Register;
 using Application.Features.Authentication.Commands.ChangePassword;
+using Application.Features.Authentication.Commands.TwoFactor;
+using Application.Features.Authentication.Commands.RefreshToken;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
+using System.Security.Claims;
 
 namespace API.Controllers;
 
@@ -42,7 +45,7 @@ public sealed class AuthenticationController : ControllerBase
     {
         var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown";
         var result = await _mediator.Send(
-            new LoginUserCommand(request.UsernameOrEmail, request.Password, ipAddress), cancellationToken);
+            new LoginUserCommand(request.UsernameOrEmail, request.Password, ipAddress, request.TwoFactorCode), cancellationToken);
         if (result.IsFailure)
             return Unauthorized(new { result.Error.Code, result.Error.Message });
         return Ok(result.Value);
@@ -67,8 +70,58 @@ public sealed class AuthenticationController : ControllerBase
         }
         return NoContent();
     }
+
+    [HttpPost("two-factor/setup")]
+    public async Task<IActionResult> StartTwoFactorSetup(CancellationToken cancellationToken)
+    {
+        if (!TryGetUserId(out var userId)) return Unauthorized();
+        return Ok(await _mediator.Send(new StartTwoFactorSetupCommand(userId), cancellationToken));
+    }
+
+    [HttpPost("two-factor/verify-setup")]
+    public async Task<IActionResult> VerifyTwoFactorSetup(
+        VerifyTwoFactorSetupRequest request, CancellationToken cancellationToken)
+    {
+        if (!TryGetUserId(out var userId)) return Unauthorized();
+        await _mediator.Send(new VerifyTwoFactorSetupCommand(userId, request.Code), cancellationToken);
+        return NoContent();
+    }
+
+    [HttpDelete("two-factor")]
+    public async Task<IActionResult> DisableTwoFactor(
+        DisableTwoFactorRequest request, CancellationToken cancellationToken)
+    {
+        if (!TryGetUserId(out var userId)) return Unauthorized();
+        await _mediator.Send(new DisableTwoFactorCommand(userId, request.CurrentPassword, request.Code), cancellationToken);
+        return NoContent();
+    }
+
+    [AllowAnonymous]
+    [HttpPost("refresh")]
+    public async Task<IActionResult> Refresh(RefreshTokenRequest request, CancellationToken cancellationToken)
+    {
+        var result = await _mediator.Send(new RefreshAccessTokenCommand(request.RefreshToken), cancellationToken);
+        if (result.IsFailure) return Unauthorized(new { result.Error.Code, result.Error.Message });
+        return Ok(result.Value);
+    }
+
+    [HttpPost("revoke-refresh-token")]
+    public async Task<IActionResult> RevokeRefreshToken(
+        RevokeRefreshTokenRequest request, CancellationToken cancellationToken)
+    {
+        if (!TryGetUserId(out var userId)) return Unauthorized();
+        await _mediator.Send(new RevokeRefreshTokenCommand(userId, request.RefreshToken), cancellationToken);
+        return NoContent();
+    }
+
+    private bool TryGetUserId(out Guid userId)
+        => Guid.TryParse(User.FindFirstValue(ClaimTypes.NameIdentifier), out userId);
 }
 
 public sealed record RegisterUserRequest(string Email, string Username, string FirstName, string LastName, string Password);
-public sealed record LoginUserRequest(string UsernameOrEmail, string Password);
+public sealed record LoginUserRequest(string UsernameOrEmail, string Password, string? TwoFactorCode = null);
 public sealed record ChangePasswordRequest(string CurrentPassword, string NewPassword);
+public sealed record VerifyTwoFactorSetupRequest(string Code);
+public sealed record DisableTwoFactorRequest(string CurrentPassword, string Code);
+public sealed record RefreshTokenRequest(string RefreshToken);
+public sealed record RevokeRefreshTokenRequest(string RefreshToken);

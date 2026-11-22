@@ -10,6 +10,9 @@ public static class AuthenticationErrors
     public static readonly Error TwoFactorVerificationRequired =
         new("Auth.TwoFactorVerificationRequired", "Two-factor verification is required for this account.");
 
+    public static readonly Error InvalidRefreshToken =
+        new("Auth.InvalidRefreshToken", "The refresh token is invalid, expired, revoked, or no longer valid.");
+
     public static readonly Error RegistrationFailed =
         new("Auth.RegistrationFailed", "The account could not be registered.");
 

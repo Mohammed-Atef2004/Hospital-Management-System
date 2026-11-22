@@ -67,6 +67,8 @@ namespace Presentation
                 .Validate(options => !string.IsNullOrWhiteSpace(options.Issuer), "JWT issuer is required.")
                 .Validate(options => !string.IsNullOrWhiteSpace(options.Audience), "JWT audience is required.")
                 .Validate(options => options.LifetimeSeconds > 0, "JWT lifetime must be greater than zero.")
+                .Validate(options => options.RefreshTokenLifetimeDays is > 0 and <= 365,
+                    "Refresh token lifetime must be between 1 and 365 days.")
                 .Validate(options => Encoding.UTF8.GetByteCount(options.SigningKey) >= 32,
                     "JWT signing key must contain at least 32 UTF-8 bytes.")
                 .ValidateOnStart();
@@ -128,6 +130,9 @@ namespace Presentation
             builder.Services.AddScoped<IShiftRepository, ShiftRepository>();
             builder.Services.AddScoped<IUserRepository, UserRepository>();
             builder.Services.AddScoped<IAuthTokenService, JwtTokenService>();
+            builder.Services.AddSingleton<IRefreshTokenService>(
+                new CryptographicRefreshTokenService(jwtOptions.RefreshTokenLifetimeDays));
+            builder.Services.AddSingleton<ITwoFactorCodeService, TotpCodeService>();
             builder.Services.AddHttpContextAccessor();
             builder.Services.AddScoped<IAppointmentRepository, AppointmentRepository>();
 

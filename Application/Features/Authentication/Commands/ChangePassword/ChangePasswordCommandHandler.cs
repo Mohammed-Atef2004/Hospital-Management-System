@@ -2,6 +2,7 @@ using Application.Features.Authentication;
 using Domain.SharedKernel;
 using Domain.Users;
 using Domain.Users.Errors;
+using Domain.Repositories;
 using MediatR;
 using Microsoft.AspNetCore.Identity;
 
@@ -12,15 +13,18 @@ public sealed class ChangePasswordCommandHandler : IRequestHandler<ChangePasswor
     private readonly UserManager<IdentityUser> _userManager;
     private readonly IUserRepository _users;
     private readonly Application.Common.ITransactionManager _transactions;
+    private readonly IUnitOfWork _unitOfWork;
 
     public ChangePasswordCommandHandler(
         UserManager<IdentityUser> userManager,
         IUserRepository users,
-        Application.Common.ITransactionManager transactions)
+        Application.Common.ITransactionManager transactions,
+        IUnitOfWork unitOfWork)
     {
         _userManager = userManager;
         _users = users;
         _transactions = transactions;
+        _unitOfWork = unitOfWork;
     }
 
     public async Task<Result> Handle(ChangePasswordCommand request, CancellationToken cancellationToken)
@@ -52,6 +56,8 @@ public sealed class ChangePasswordCommandHandler : IRequestHandler<ChangePasswor
 
         var domainResult = user.RecordPasswordChange(identityUser.PasswordHash!, isPasswordReused: false);
         if (domainResult.IsFailure) return domainResult;
+
+        await _unitOfWork.RefreshTokens.RevokeAllForUserAsync(user.Id, DateTime.UtcNow, cancellationToken);
 
         await _transactions.SaveChangesAsync(cancellationToken);
         return Result.Success();

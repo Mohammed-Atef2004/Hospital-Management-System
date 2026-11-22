@@ -28,6 +28,13 @@ public sealed class AuthenticationPersistenceTests
         Assert.IsType<string>(encrypted);
         Assert.NotEqual(secret, encrypted);
         Assert.Equal(secret, converter.ConvertFromProvider(encrypted));
+
+        var pendingProperty = context.Model.FindEntityType(typeof(User))!
+            .FindProperty(nameof(User.PendingTwoFactorSecret))!;
+        var pendingConverter = pendingProperty.GetValueConverter();
+        var encryptedPending = pendingConverter!.ConvertToProvider(secret);
+        Assert.NotEqual(secret, encryptedPending);
+        Assert.Equal(secret, pendingConverter.ConvertFromProvider(encryptedPending));
     }
 
     [Fact]

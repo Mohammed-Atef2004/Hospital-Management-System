@@ -277,6 +277,20 @@ public sealed class UserAuthenticationTests
     }
 
     [Fact]
+    public void TwoFactorSetup_ShouldRequirePendingSecretBeforeEnabling()
+    {
+        var user = CreateUser();
+        const string secret = "abcdefghijklmnopqrstuvwxyz234567";
+
+        Assert.Equal(UserErrors.SecurityErrors.TwoFactorSetupNotStarted, user.CompleteTwoFactorSetup().Error);
+        Assert.True(user.BeginTwoFactorSetup(secret).IsSuccess);
+        Assert.Equal(secret.ToUpperInvariant(), user.PendingTwoFactorSecret);
+        Assert.True(user.CompleteTwoFactorSetup().IsSuccess);
+        Assert.True(user.IsTwoFactorEnabled);
+        Assert.Null(user.PendingTwoFactorSecret);
+    }
+
+    [Fact]
     public void DisableTwoFactor_WhenNotEnabled_ShouldFailWithoutEvent()
     {
         var user = CreateUser();

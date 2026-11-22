@@ -5,4 +5,6 @@ public sealed record AuthResponse(
     DateTime ExpiresAtUtc,
     Guid UserId,
     string Username,
-    string Role);
+    string Role,
+    string RefreshToken,
+    DateTime RefreshTokenExpiresAtUtc);

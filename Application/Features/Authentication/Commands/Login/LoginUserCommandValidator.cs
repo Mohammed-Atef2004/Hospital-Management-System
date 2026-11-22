@@ -8,5 +8,8 @@ public sealed class LoginUserCommandValidator : AbstractValidator<LoginUserComma
     {
         RuleFor(command => command.UsernameOrEmail).NotEmpty().MaximumLength(254);
         RuleFor(command => command.Password).NotEmpty().MaximumLength(128);
+        RuleFor(command => command.TwoFactorCode)
+            .Matches("^[0-9]{6}$")
+            .When(command => !string.IsNullOrWhiteSpace(command.TwoFactorCode));
     }
 }

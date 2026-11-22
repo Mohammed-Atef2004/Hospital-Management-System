@@ -48,6 +48,7 @@ public sealed class User : AggregateRoot<Guid>
     /// Exposed here as a plain string so the domain stays persistence-ignorant.
     /// </summary>
     public string? TwoFactorSecret { get; private set; }
+    public string? PendingTwoFactorSecret { get; private set; }
 
     // ─── Password History ──────────────────────────────────────────────────────
 
@@ -389,6 +390,29 @@ public sealed class User : AggregateRoot<Guid>
         return Result.Success();
     }
 
+    public Result BeginTwoFactorSetup(string secret)
+    {
+        if (!CanModify()) return Result.Failure(UserErrors.Deactivated);
+        if (IsTwoFactorEnabled)
+            return Result.Failure(UserErrors.SecurityErrors.TwoFactorAlreadyEnabled);
+        if (!IsValidTwoFactorSecret(secret))
+            return Result.Failure(UserErrors.SecurityErrors.InvalidTwoFactorSecret);
+
+        PendingTwoFactorSecret = secret.Trim().ToUpperInvariant();
+        SetUpdated("system");
+        return Result.Success();
+    }
+
+    public Result CompleteTwoFactorSetup()
+    {
+        if (string.IsNullOrWhiteSpace(PendingTwoFactorSecret))
+            return Result.Failure(UserErrors.SecurityErrors.TwoFactorSetupNotStarted);
+
+        var result = EnableTwoFactor(PendingTwoFactorSecret);
+        if (result.IsSuccess) PendingTwoFactorSecret = null;
+        return result;
+    }
+
     public Result DisableTwoFactor()
     {
         if (!CanModify()) return Result.Failure(UserErrors.Deactivated);
@@ -396,6 +420,7 @@ public sealed class User : AggregateRoot<Guid>
             return Result.Failure(UserErrors.SecurityErrors.TwoFactorNotEnabled);
 
         TwoFactorSecret = null;
+        PendingTwoFactorSecret = null;
         IsTwoFactorEnabled = false;
         SetUpdated("system");
 
@@ -442,6 +467,9 @@ public sealed class User : AggregateRoot<Guid>
     /// <summary>True when a lockout is currently in effect.</summary>
     private bool IsLockedOut() =>
         LockedUntil.HasValue && LockedUntil.Value > DateTime.UtcNow;
+
+    public bool IsAuthenticationLockedOut(DateTime utcNow)
+        => LockedUntil.HasValue && LockedUntil.Value > utcNow;
 
     private static bool IsValidTwoFactorSecret(string? secret)
     {

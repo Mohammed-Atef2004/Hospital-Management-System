@@ -1,5 +1,6 @@
 using Application.Features.Authentication;
 using Domain.SharedKernel;
+using Domain.Repositories;
 using Domain.Users;
 using Domain.Users.ValueObjects;
 using MediatR;
@@ -13,17 +14,23 @@ public sealed class RegisterUserCommandHandler : IRequestHandler<RegisterUserCom
     private readonly IUserRepository _users;
     private readonly Application.Common.ITransactionManager _transactions;
     private readonly IAuthTokenService _tokens;
+    private readonly IRefreshTokenService _refreshTokens;
+    private readonly IUnitOfWork _unitOfWork;
 
     public RegisterUserCommandHandler(
         UserManager<IdentityUser> userManager,
         IUserRepository users,
         Application.Common.ITransactionManager transactions,
-        IAuthTokenService tokens)
+        IAuthTokenService tokens,
+        IRefreshTokenService refreshTokens,
+        IUnitOfWork unitOfWork)
     {
         _userManager = userManager;
         _users = users;
         _transactions = transactions;
         _tokens = tokens;
+        _refreshTokens = refreshTokens;
+        _unitOfWork = unitOfWork;
     }
 
     public async Task<Result<AuthResponse>> Handle(RegisterUserCommand request, CancellationToken cancellationToken)
@@ -76,10 +83,14 @@ public sealed class RegisterUserCommandHandler : IRequestHandler<RegisterUserCom
         }
 
         await _users.AddAsync(user);
+        var refreshToken = _refreshTokens.Create();
+        await _unitOfWork.RefreshTokens.AddAsync(
+            Domain.Users.RefreshToken.Issue(user.Id, refreshToken.TokenHash, refreshToken.ExpiresAtUtc));
         await _transactions.SaveChangesAsync(cancellationToken);
 
         var (token, expiresAtUtc) = _tokens.CreateToken(user);
         return Result<AuthResponse>.Success(new AuthResponse(
-            token, expiresAtUtc, user.Id, user.Username.Value, user.Role.ToString()));
+            token, expiresAtUtc, user.Id, user.Username.Value, user.Role.ToString(),
+            refreshToken.Token, refreshToken.ExpiresAtUtc));
     }
 }

@@ -47,13 +47,13 @@ Domain event dispatch is currently best-effort after commit. There is no outbox 
 
 | Module | Implemented | Remaining work |
 | --- | --- | --- |
-| **Authentication** | Registration, username/email login, JWT issuance and validation, authenticated password change, persistent lockout rules, password history, admin-controlled user-role changes and staff-profile linking, and a `staff_id` claim for linked staff. Two-factor-enabled accounts cannot receive a password-only token. | Complete 2FA setup and verification, email confirmation, and password reset/recovery and refresh-token flows. |
+| **Authentication** | Registration, username/email login, JWT issuance and validation, authenticated password change, persistent lockout rules, password history, TOTP two-factor enrollment/verification/disable, rotating opaque refresh tokens stored as hashes, admin-controlled user-role changes and staff-profile linking, and a `staff_id` claim for linked staff. | Email confirmation and password reset/recovery need a configured email delivery provider; add security-focused API tests. |
 | **Doctors** | Doctor lifecycle, profile and office updates, department transfer, schedule/appointment use cases, value objects, and domain events. | Tie doctor profiles to login identities; expand authorization and API/integration coverage. |
 | **Departments** | Create/read/update operations, activation/deactivation, case-normalized duplicate checks, a database uniqueness constraint, value objects, and domain events. | Broader application and persistence integration tests. |
 | **Appointments** | Create, list and retrieve, query by doctor/patient/upcoming/cancelled, reschedule, update description/participants, and cancel. Booking checks active doctors, working shifts, patient existence, and exact timestamp conflicts. A filtered unique index blocks duplicate active doctor/time slots. | Define appointment duration and overlap semantics; add broader API/integration and concurrent-booking tests. |
 | **Medicines and dispensing** | Medicine management, stock adjustments, dispensing, expiry and low-stock queries, rowversion optimistic concurrency for stock changes, and conflict responses for concurrent writes. | SQL Server integration tests and broader dispensing coverage. |
 | **Nursing, staff, and shifts** | Nurse management, shifts, patient assignments/transfers, vital-sign recording, department changes, head-nurse status, and admin-controlled account-to-staff linking with a consistent `staff_id` claim. | Broaden authorization and persistence tests. |
-| **Patients and clinical records** | Patient self-service profile creation and update through `/api/patients/me`, backed by an optional unique account link; clinical-record entities and nurse assignment support. | Patient medical-record and prescription APIs, ownership rules for clinical data, and broader API/integration coverage. |
+| **Patients and clinical records** | Patient self-service profile creation and update through `/api/patients/me`, backed by an optional unique account link; clinical-record entities and nurse assignment support. | Patient medical-record and prescription APIs, resource-level ownership rules for clinical data, and broader API/integration coverage. |
 
 ## API reference
 
@@ -66,6 +66,11 @@ The API base path is `/api`. Swagger UI is enabled in the Development environmen
 | `POST` | `/api/auth/register` | Anonymous | Register a patient-role account and return a token. |
 | `POST` | `/api/auth/login` | Anonymous | Sign in with username or email and password. |
 | `POST` | `/api/auth/change-password` | Authenticated | Change the current user's password. |
+| `POST` | `/api/auth/two-factor/setup` | Authenticated | Create a TOTP enrollment secret and provisioning URI. |
+| `POST` | `/api/auth/two-factor/verify-setup` | Authenticated | Verify a TOTP code and enable two-factor authentication. |
+| `DELETE` | `/api/auth/two-factor` | Authenticated | Disable two-factor authentication using the password and TOTP code. |
+| `POST` | `/api/auth/refresh` | Anonymous | Rotate a valid refresh token and return a new access/refresh pair. |
+| `POST` | `/api/auth/revoke-refresh-token` | Authenticated | Revoke the current user's refresh token. |
 
 ### Patient profile — `/api/patients/me`
 
@@ -204,7 +209,7 @@ The API listens on port `8080`; SQL Server data persists in the `sqlserver-data`
 
 ## Tests and CI
 
-The existing xUnit suite contains 153 tests. It covers doctor lifecycle, schedules and appointments, department lifecycle and events, patient profile rules, nurses and shifts, patient assignments, authentication domain rules and value objects, transaction behavior for login lockout persistence, and persistence configuration for encrypted two-factor secrets and concurrency/link constraints.
+The existing xUnit suite contains 158 tests. It covers doctor lifecycle, schedules and appointments, department lifecycle and events, patient profile rules, nurses and shifts, patient assignments, authentication domain rules and value objects, TOTP and refresh-token behavior, transaction behavior for login lockout persistence, and selected persistence configuration for encrypted two-factor secrets and concurrency/link constraints.
 
 The CI workflow restores, builds, runs the existing tests, and checks for pending EF model changes on pull requests and pushes to `main` or `master`. Application handler, authorization/HTTP contract, concurrency, and SQL Server integration test coverage remains incomplete.
 
@@ -212,8 +217,8 @@ The CI workflow restores, builds, runs the existing tests, and checks for pendin
 
 ### Identity and security
 
-- Link Identity/domain users to patient records at account creation; ensure profile workflows require confirmed accounts when email confirmation is implemented.
-- Complete two-factor enrollment and verification, email confirmation, password reset/recovery, and refresh-token flows.
+- Ensure patient accounts are linked to patient records at registration rather than only when a profile is created; require confirmed accounts when email confirmation is implemented.
+- Configure email delivery and complete email confirmation and password reset/recovery flows.
 - Add security-focused API tests for login, registration, throttling, and account lockout.
 - Extend patient-data authorization with resource ownership checks once patient identity links exist.
 

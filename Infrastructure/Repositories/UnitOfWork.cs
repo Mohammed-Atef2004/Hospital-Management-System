@@ -26,6 +26,7 @@ namespace Infastructure.Repositories
         public IAssignPatientRepository PatientAssignment
         { get; private set; }
         public IUserRepository User { get; private set; }
+        public IRefreshTokenRepository RefreshTokens { get; private set; }
 
         public UnitOfWork(ApplicationDbContext context)
         {
@@ -40,6 +41,7 @@ namespace Infastructure.Repositories
             Staff = new StaffRepository(_context);
             PatientAssignment = new AssignPatientRepository(_context);
             User = new UserRepository(_context);
+            RefreshTokens = new RefreshTokenRepository(_context);
         }
 
         public async Task<int> CompleteAsync()

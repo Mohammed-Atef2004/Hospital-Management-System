@@ -20,6 +20,7 @@ public sealed class UserConfiguration : IEntityTypeConfiguration<User>
         builder.Property(user => user.Role).IsRequired();
         builder.Property(user => user.PasswordHistoryJson).IsRequired().HasMaxLength(4000);
         builder.Property(user => user.TwoFactorSecret).HasMaxLength(1024);
+        builder.Property(user => user.PendingTwoFactorSecret).HasMaxLength(1024);
         builder.Property(user => user.DeleteReason).HasMaxLength(500);
         builder.Property(user => user.IsActive).IsRequired();
         builder.Property(user => user.FailedLoginAttempts).IsRequired();

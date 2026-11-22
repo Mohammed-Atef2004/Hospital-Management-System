@@ -22,6 +22,7 @@ namespace Domain.Repositories
         IAssignPatientRepository PatientAssignment
         { get; }
         IUserRepository User { get; }
+        IRefreshTokenRepository RefreshTokens { get; }
 
         Task<int> CompleteAsync();
     }
