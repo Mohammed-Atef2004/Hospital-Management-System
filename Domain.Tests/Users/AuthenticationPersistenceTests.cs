@@ -45,4 +45,45 @@ public sealed class AuthenticationPersistenceTests
         Assert.True(property.IsConcurrencyToken);
         Assert.Equal("rowversion", property.GetColumnType());
     }
+
+    [Fact]
+    public void UserStaffProfile_ShouldHaveUniqueOptionalForeignKey()
+    {
+        IDataProtectionProvider dataProtectionProvider = new EphemeralDataProtectionProvider();
+        var options = new DbContextOptionsBuilder<ApplicationDbContext>()
+            .UseSqlServer("Server=localhost;Database=HospitalManagementSystemTests;Trusted_Connection=True;TrustServerCertificate=True")
+            .Options;
+        using var context = new ApplicationDbContext(options, dataProtectionProvider);
+
+        var userEntity = context.Model.FindEntityType(typeof(User))!;
+        var staffIdProperty = userEntity.FindProperty(nameof(User.StaffId))!;
+        var staffRelationship = userEntity.GetForeignKeys()
+            .Single(key => key.Properties.Contains(staffIdProperty));
+        var staffIndex = userEntity.GetIndexes()
+            .Single(index => index.Properties.Contains(staffIdProperty));
+
+        Assert.True(staffRelationship.IsUnique);
+        Assert.True(staffIdProperty.IsNullable);
+        Assert.True(staffIndex.IsUnique);
+    }
+
+    [Fact]
+    public void PatientAccountLink_ShouldHaveOptionalUniqueForeignKey()
+    {
+        IDataProtectionProvider dataProtectionProvider = new EphemeralDataProtectionProvider();
+        var options = new DbContextOptionsBuilder<ApplicationDbContext>()
+            .UseSqlServer("Server=localhost;Database=HospitalManagementSystemTests;Trusted_Connection=True;TrustServerCertificate=True")
+            .Options;
+        using var context = new ApplicationDbContext(options, dataProtectionProvider);
+
+        var patientEntity = context.Model.FindEntityType(typeof(Domain.Entities.Patient))!;
+        var userIdProperty = patientEntity.FindProperty(nameof(Domain.Entities.Patient.UserId))!;
+        var relationship = patientEntity.GetForeignKeys()
+            .Single(key => key.Properties.Contains(userIdProperty));
+        var index = patientEntity.GetIndexes().Single(item => item.Properties.Contains(userIdProperty));
+
+        Assert.True(relationship.IsUnique);
+        Assert.True(userIdProperty.IsNullable);
+        Assert.True(index.IsUnique);
+    }
 }

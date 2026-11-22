@@ -41,6 +41,15 @@ public static class UserErrors
     public static readonly Error CannotAssignSuperAdminRole =
         new("User.CannotAssignSuperAdminRole", "SuperAdmin role cannot be assigned through normal operations.");
 
+    public static readonly Error StaffProfileAlreadyLinked =
+        new("User.StaffProfileAlreadyLinked", "This account is already linked to a staff profile.");
+
+    public static readonly Error StaffRoleMismatch =
+        new("User.StaffRoleMismatch", "The account role does not match the selected staff profile type.");
+
+    public static readonly Error StaffProfileInactive =
+        new("User.StaffProfileInactive", "An inactive staff profile cannot be linked to an account.");
+
     
 
    

@@ -100,6 +100,7 @@ namespace Presentation
                 options.AddPolicy("Administrative", policy => policy.RequireRole("Admin"));
                 options.AddPolicy("Clinical", policy => policy.RequireRole("Admin", "Doctor", "Nurse"));
                 options.AddPolicy("CareProviders", policy => policy.RequireRole("Admin", "Doctor"));
+                options.AddPolicy("Patients", policy => policy.RequireRole("Patient"));
             });
             builder.Services.AddRateLimiter(options =>
             {

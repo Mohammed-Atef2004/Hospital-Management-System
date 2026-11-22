@@ -7,6 +7,7 @@ using Domain.PatientAssignments;
 using Domain.personnel;
 using Domain.Repositories;
 using Domain.Schedules;
+using Domain.Users;
 using Infastructure.Presistence.Database;
 using Infrastructure.Repositories;
 
@@ -24,6 +25,7 @@ namespace Infastructure.Repositories
         public IStaffRepository Staff { get; private set; }
         public IAssignPatientRepository PatientAssignment
         { get; private set; }
+        public IUserRepository User { get; private set; }
 
         public UnitOfWork(ApplicationDbContext context)
         {
@@ -37,6 +39,7 @@ namespace Infastructure.Repositories
             Medicine = new MedicineRepository(_context);
             Staff = new StaffRepository(_context);
             PatientAssignment = new AssignPatientRepository(_context);
+            User = new UserRepository(_context);
         }
 
         public async Task<int> CompleteAsync()

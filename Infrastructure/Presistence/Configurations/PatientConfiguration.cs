@@ -13,6 +13,17 @@ namespace Infastructure.Presistence.Configurations
 
             builder.HasKey(p => p.Id);
 
+            builder.Property(p => p.FirstName).IsRequired().HasMaxLength(100);
+            builder.Property(p => p.LastName).IsRequired().HasMaxLength(100);
+            builder.Property(p => p.Address).IsRequired().HasMaxLength(250);
+            builder.Property(p => p.City).HasMaxLength(100);
+            builder.Property(p => p.PhoneNumber).HasMaxLength(20);
+            builder.HasIndex(p => p.UserId).IsUnique().HasFilter("[UserId] IS NOT NULL AND [IsDeleted] = 0");
+            builder.HasOne(p => p.Account)
+                .WithOne()
+                .HasForeignKey<Patient>(p => p.UserId)
+                .OnDelete(DeleteBehavior.Restrict);
+
             //builder
             //   .HasOne(p => p.ApplicationUser)
             //   .WithOne(au => au.PatientProfile)

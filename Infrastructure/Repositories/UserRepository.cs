@@ -16,7 +16,8 @@ public sealed class UserRepository : GenericRepository<User>, IUserRepository
         => _dbSet.AnyAsync(user => user.Username.Value == username.Value && user.IsActive && !user.IsDeleted, ct);
 
     public Task<User?> GetByIdentityIdAsync(string identityId, CancellationToken ct = default)
-        => _dbSet.SingleOrDefaultAsync(user => user.IdentityId == identityId, ct);
+        => _dbSet.Include(user => user.StaffProfile)
+            .SingleOrDefaultAsync(user => user.IdentityId == identityId, ct);
 
     public async Task<IReadOnlyList<User>> GetByRoleAsync(UserRole role, CancellationToken ct = default)
         => await _dbSet.Where(user => user.Role == role && user.IsActive && !user.IsDeleted)

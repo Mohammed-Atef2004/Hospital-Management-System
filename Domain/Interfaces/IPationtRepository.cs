@@ -4,7 +4,7 @@ namespace Domain.Repositories
 {
     public interface IPatientRepository : IGenericRepository<Patient>
     {
-        public void Update(Patient patient);
         public Task<bool> ExistsAsync(int id, CancellationToken cancellationToken = default);
+        Task<Patient?> GetByUserIdAsync(Guid userId, CancellationToken cancellationToken = default);
     }
 }

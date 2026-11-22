@@ -5,6 +5,7 @@ using Domain.Nurses;
 using Domain.PatientAssignments;
 using Domain.personnel;
 using Domain.Schedules;
+using Domain.Users;
 
 
 namespace Domain.Repositories
@@ -20,6 +21,7 @@ namespace Domain.Repositories
         IStaffRepository Staff { get; }
         IAssignPatientRepository PatientAssignment
         { get; }
+        IUserRepository User { get; }
 
         Task<int> CompleteAsync();
     }

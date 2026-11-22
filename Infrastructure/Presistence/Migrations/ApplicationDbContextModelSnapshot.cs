@@ -221,10 +221,12 @@ namespace Infrastructure.Presistence.Migrations
 
                     b.Property<string>("Address")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(250)
+                        .HasColumnType("nvarchar(250)");
 
                     b.Property<string>("City")
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
 
                     b.Property<DateTime?>("CreatedAt")
                         .HasColumnType("datetime2");
@@ -240,20 +242,23 @@ namespace Infrastructure.Presistence.Migrations
 
                     b.Property<string>("FirstName")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
 
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("bit");
 
                     b.Property<string>("LastName")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
 
                     b.Property<int?>("NurseId")
                         .HasColumnType("int");
 
                     b.Property<string>("PhoneNumber")
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
 
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("datetime2");
@@ -261,9 +266,16 @@ namespace Infrastructure.Presistence.Migrations
                     b.Property<string>("UpdatedBy")
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<Guid?>("UserId")
+                        .HasColumnType("uniqueidentifier");
+
                     b.HasKey("Id");
 
                     b.HasIndex("NurseId");
+
+                    b.HasIndex("UserId")
+                        .IsUnique()
+                        .HasFilter("[UserId] IS NOT NULL AND [IsDeleted] = 0");
 
                     b.ToTable("Patients", (string)null);
                 });
@@ -659,6 +671,9 @@ namespace Infrastructure.Presistence.Migrations
                     b.Property<int>("Role")
                         .HasColumnType("int");
 
+                    b.Property<int?>("StaffId")
+                        .HasColumnType("int");
+
                     b.Property<string>("TwoFactorSecret")
                         .HasMaxLength(1024)
                         .HasColumnType("nvarchar(1024)");
@@ -673,6 +688,10 @@ namespace Infrastructure.Presistence.Migrations
 
                     b.HasIndex("IdentityId")
                         .IsUnique();
+
+                    b.HasIndex("StaffId")
+                        .IsUnique()
+                        .HasFilter("[StaffId] IS NOT NULL");
 
                     b.ToTable("DomainUsers", (string)null);
                 });
@@ -1048,6 +1067,13 @@ namespace Infrastructure.Presistence.Migrations
                         .WithMany()
                         .HasForeignKey("NurseId");
 
+                    b.HasOne("Domain.Users.User", "Account")
+                        .WithOne()
+                        .HasForeignKey("Domain.Entities.Patient", "UserId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.Navigation("Account");
+
                     b.Navigation("Nurse");
                 });
 
@@ -1148,6 +1174,11 @@ namespace Infrastructure.Presistence.Migrations
 
             modelBuilder.Entity("Domain.Users.User", b =>
                 {
+                    b.HasOne("Domain.personnel.Staff", "StaffProfile")
+                        .WithOne()
+                        .HasForeignKey("Domain.Users.User", "StaffId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
                     b.OwnsOne("Domain.Users.ValueObjects.Email", "Email", b1 =>
                         {
                             b1.Property<Guid>("UserId")
@@ -1245,6 +1276,8 @@ namespace Infrastructure.Presistence.Migrations
                         .IsRequired();
 
                     b.Navigation("PhoneNumber");
+
+                    b.Navigation("StaffProfile");
 
                     b.Navigation("Username")
                         .IsRequired();

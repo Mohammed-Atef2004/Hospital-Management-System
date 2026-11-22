@@ -28,13 +28,16 @@ public sealed class JwtTokenService : IAuthTokenService
             new Claim(ClaimTypes.Role, user.Role.ToString()),
             new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
         };
+        var tokenClaims = user.StaffId.HasValue
+            ? claims.Append(new Claim("staff_id", user.StaffId.Value.ToString())).ToArray()
+            : claims;
         var credentials = new SigningCredentials(
             new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_options.SigningKey)),
             SecurityAlgorithms.HmacSha256);
         var token = new JwtSecurityToken(
             issuer: _options.Issuer,
             audience: _options.Audience,
-            claims: claims,
+            claims: tokenClaims,
             notBefore: now,
             expires: expires,
             signingCredentials: credentials);

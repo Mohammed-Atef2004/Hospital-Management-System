@@ -11,6 +11,11 @@ public sealed class UserConfiguration : IEntityTypeConfiguration<User>
         builder.ToTable("DomainUsers");
         builder.HasKey(user => user.Id);
         builder.HasIndex(user => user.IdentityId).IsUnique();
+        builder.HasOne(user => user.StaffProfile)
+            .WithOne()
+            .HasForeignKey<User>(user => user.StaffId)
+            .OnDelete(DeleteBehavior.Restrict);
+        builder.HasIndex(user => user.StaffId).IsUnique().HasFilter("[StaffId] IS NOT NULL");
         builder.Property(user => user.IdentityId).IsRequired().HasMaxLength(450);
         builder.Property(user => user.Role).IsRequired();
         builder.Property(user => user.PasswordHistoryJson).IsRequired().HasMaxLength(4000);

@@ -1,6 +1,9 @@
 using Domain.Users;
 using Domain.Users.Errors;
 using Domain.Users.Events;
+using Domain.Doctors;
+using Domain.Nurses;
+using DoctorEntity = Domain.Doctors.Doctor;
 
 namespace Domain.Tests.Users;
 
@@ -105,6 +108,26 @@ public sealed class UserAuthenticationTests
         var user = CreateUser();
 
         Assert.Equal(UserErrors.RoleAlreadyAssigned, user.ChangeRole(UserRole.Patient).Error);
+    }
+
+    [Fact]
+    public void LinkStaffProfile_ShouldRequireMatchingRoleAndRaiseEvent()
+    {
+        var doctorUser = CreateUser(UserRole.Doctor);
+        var doctor = DoctorEntity.Create("Mona", "Ali", "12 Main St", "Cairo", "Cardiology");
+        doctorUser.ClearDomainEvents();
+
+        var linked = doctorUser.LinkStaffProfile(doctor);
+
+        Assert.True(linked.IsSuccess);
+        Assert.Same(doctor, doctorUser.StaffProfile);
+        Assert.Equal(doctor.Id, doctorUser.StaffId);
+        Assert.Contains(doctorUser.DomainEvents, item => item is UserStaffProfileLinkedDomainEvent);
+        Assert.Equal(UserErrors.StaffProfileAlreadyLinked, doctorUser.LinkStaffProfile(doctor).Error);
+
+        var nurseUser = CreateUser(UserRole.Doctor);
+        var nurse = Nurse.Register("Hana", "Said", "2 Clinic Rd", "Cairo", null, false);
+        Assert.Equal(UserErrors.StaffRoleMismatch, nurseUser.LinkStaffProfile(nurse).Error);
     }
 
     [Fact]

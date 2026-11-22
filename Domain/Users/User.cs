@@ -3,6 +3,9 @@ using Domain.Users.Errors;
 using Domain.Users.Events;
 using Domain.Users.Rules;
 using Domain.Users.ValueObjects;
+using Domain.personnel;
+using Domain.Doctors;
+using Domain.Nurses;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Domain.Users;
@@ -20,6 +23,8 @@ public sealed class User : AggregateRoot<Guid>
 
     // ─── Authorization ─────────────────────────────────────────────────────────
     public UserRole Role { get; private set; }
+    public int? StaffId { get; private set; }
+    public Staff? StaffProfile { get; private set; }
 
     // ─── Lifecycle ─────────────────────────────────────────────────────────────
     public bool IsActive { get; private set; }
@@ -194,11 +199,37 @@ public sealed class User : AggregateRoot<Guid>
 
     // ─── Role Operations ───────────────────────────────────────────────────────
 
+    public Result LinkStaffProfile(Staff staff)
+    {
+        ArgumentNullException.ThrowIfNull(staff);
+        if (!CanModify()) return Result.Failure(UserErrors.Deactivated);
+        if (StaffProfile is not null || StaffId.HasValue)
+            return Result.Failure(UserErrors.StaffProfileAlreadyLinked);
+
+        var roleMatches = (staff is Doctor && Role == UserRole.Doctor)
+            || (staff is Nurse && Role == UserRole.Nurse);
+        if (!roleMatches)
+            return Result.Failure(UserErrors.StaffRoleMismatch);
+        if (staff.IsDeleted)
+            return Result.Failure(UserErrors.StaffProfileInactive);
+
+        StaffProfile = staff;
+        StaffId = staff.Id;
+        SetUpdated("system");
+        AddDomainEvent(new UserStaffProfileLinkedDomainEvent(Id, staff.Id, Role));
+        return Result.Success();
+    }
+
     public Result ChangeRole(UserRole newRole)
     {
         if (!CanModify()) return Result.Failure(UserErrors.Deactivated);
         if (Role == newRole) return Result.Failure(UserErrors.RoleAlreadyAssigned);
         if (!Enum.IsDefined(newRole)) return Result.Failure(UserErrors.InvalidRole);
+
+        if (StaffProfile is not null &&
+            !((StaffProfile is Doctor && newRole == UserRole.Doctor)
+              || (StaffProfile is Nurse && newRole == UserRole.Nurse)))
+            return Result.Failure(UserErrors.StaffRoleMismatch);
 
         // SuperAdmin is only seeded, never assigned through normal flow
         if (newRole == UserRole.Admin)
