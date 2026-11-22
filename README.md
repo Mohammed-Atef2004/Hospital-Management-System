@@ -209,7 +209,7 @@ The API listens on port `8080`; SQL Server data persists in the `sqlserver-data`
 
 ## Tests and CI
 
-The existing xUnit suite contains 158 tests. It covers doctor lifecycle, schedules and appointments, department lifecycle and events, patient profile rules, nurses and shifts, patient assignments, authentication domain rules and value objects, TOTP and refresh-token behavior, transaction behavior for login lockout persistence, and selected persistence configuration for encrypted two-factor secrets and concurrency/link constraints.
+The existing xUnit suite contains 164 tests. It covers doctor lifecycle, appointment rules and events, schedules, department lifecycle and events, patient profile rules, nurses and shifts, patient assignments, authentication domain rules and value objects, TOTP and refresh-token behavior, transaction behavior for login lockout persistence, and selected persistence configuration for encrypted two-factor secrets and concurrency/link constraints.
 
 The CI workflow restores, builds, runs the existing tests, and checks for pending EF model changes on pull requests and pushes to `main` or `master`. Application handler, authorization/HTTP contract, concurrency, and SQL Server integration test coverage remains incomplete.
 
