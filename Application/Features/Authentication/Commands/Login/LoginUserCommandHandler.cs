@@ -47,6 +47,10 @@ public sealed class LoginUserCommandHandler : IRequestHandler<LoginUserCommand, 
             return Result<AuthResponse>.Failure(AuthenticationErrors.InvalidCredentials);
         }
 
+        // Never issue an access token for an account with 2FA enabled until a verification flow is supplied.
+        if (user.IsTwoFactorEnabled)
+            return Result<AuthResponse>.Failure(AuthenticationErrors.TwoFactorVerificationRequired);
+
         var loginResult = user.RecordSuccessfulLogin(request.IpAddress);
         if (loginResult.IsFailure)
             return Result<AuthResponse>.Failure(AuthenticationErrors.InvalidCredentials);

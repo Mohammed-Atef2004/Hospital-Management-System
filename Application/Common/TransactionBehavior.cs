@@ -20,7 +20,7 @@ public sealed class TransactionBehavior<TRequest, TResponse> : IPipelineBehavior
         try
         {
             var response = await next();
-            if (response is Result result && result.IsFailure)
+            if (response is Result result && result.IsFailure && request is not ICommitTransactionOnFailure)
             {
                 await transaction.RollbackAsync(cancellationToken);
                 return response;
@@ -35,3 +35,6 @@ public sealed class TransactionBehavior<TRequest, TResponse> : IPipelineBehavior
         }
     }
 }
+
+/// <summary>Marks commands whose rejected result still records security state, such as failed-login counters.</summary>
+public interface ICommitTransactionOnFailure { }
