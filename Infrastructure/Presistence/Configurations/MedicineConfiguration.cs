@@ -24,6 +24,9 @@ namespace Infastructure.Presistence.Configurations
             builder.Property(m => m.Price)
                 .IsRequired()
                 .HasColumnType("decimal(18,2)");
+
+            builder.Property(m => m.RowVersion)
+                .IsRowVersion();
         }
     }
 }

@@ -13,6 +13,7 @@ namespace Domain.Medicines
         public int Stock { get; private set; }
         public decimal Price { get; private set; }
         public DateTime ExpiryDate { get; private set; }
+        public byte[] RowVersion { get; private set; } = null!;
         //public int PharmacyId { get; private set; }
         //public Pharmacy? Pharmacy { get; private set; }
 

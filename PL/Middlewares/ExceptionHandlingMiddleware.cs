@@ -54,6 +54,7 @@ namespace API.Middlewares
                 ForbiddenAccessException => (StatusCodes.Status403Forbidden, exception.Message),
                 UnauthorizedAccessException => (StatusCodes.Status401Unauthorized, "Unauthorized."),
                 ConflictException => (StatusCodes.Status409Conflict, exception.Message),
+                DbUpdateConcurrencyException => (StatusCodes.Status409Conflict, "The record changed during this request. Reload it and try again."),
                 BadRequestException => (StatusCodes.Status400BadRequest, exception.Message),
                 FluentValidation.ValidationException validationException =>
                     (StatusCodes.Status400BadRequest, string.Join(" ", validationException.Errors.Select(error => error.ErrorMessage))),
