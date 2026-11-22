@@ -38,7 +38,7 @@ flowchart LR
 1. Controllers send MediatR requests to the Application layer.
 2. FluentValidation validates requests before their handlers run.
 3. Write requests implement `ICommandRequest<T>` and execute inside the transaction behavior. Queries do not open database transactions.
-4. Failed domain `Result` responses roll back the transaction. Successful writes commit before domain events are dispatched.
+4. Failed domain `Result` responses roll back by default. Login is the exception: rejected logins commit failed-attempt/lockout state. Successful writes commit before domain events are dispatched.
 5. Infrastructure implements the application transaction port and persists data through EF Core and SQL Server.
 
 Domain event dispatch is currently best-effort after commit. There is no outbox yet, so reliable delivery across process failures remains future work.
@@ -47,10 +47,10 @@ Domain event dispatch is currently best-effort after commit. There is no outbox 
 
 | Module | Implemented | Remaining work |
 | --- | --- | --- |
-| **Authentication** | Registration, username/email login, JWT issuance and validation, authenticated password change, lockout rules, password history, and encrypted-at-rest storage for a two-factor secret. | Two-factor setup and verification, email confirmation, password reset/recovery, refresh tokens, and staff identity linking. |
-| **Doctors** | Doctor lifecycle, profile and office updates, department transfer, schedule/appointment use cases, value objects, and domain events. | Tie doctor profiles to login identities; extend authorization and API/integration coverage. |
-| **Departments** | Create/read/update operations, activation/deactivation, validation, value objects, and domain events. | Broader persistence, uniqueness, and API tests. |
-| **Appointments** | Create, list and retrieve, query by doctor/patient/upcoming/cancelled, reschedule, update description/participants, and cancel. | Consistent availability and overlap rules, cross-aggregate checks, and concurrent-booking protection. |
+| **Authentication** | Registration, username/email login, JWT issuance and validation, authenticated password change, persistent lockout rules, password history, and encrypted-at-rest storage for a two-factor secret. Login does not issue a token when 2FA is enabled but unverified. | Complete 2FA setup and verification, email confirmation, password reset/recovery, refresh tokens, and staff identity linking. |
+| **Doctors** | Doctor lifecycle, profile and office updates, department transfer, schedule/appointment use cases, value objects, and domain events. | Tie doctor profiles to login identities; expand authorization and API/integration coverage. |
+| **Departments** | Create/read/update operations, activation/deactivation, case-normalized duplicate checks, a database uniqueness constraint, value objects, and domain events. | Broader application and persistence integration tests. |
+| **Appointments** | Create, list and retrieve, query by doctor/patient/upcoming/cancelled, reschedule, update description/participants, and cancel. Booking checks active doctors, working shifts, patient existence, and exact timestamp conflicts. A filtered unique index blocks duplicate active doctor/time slots. | Define appointment duration and overlap semantics; add broader API/integration and concurrent-booking tests. |
 | **Medicines and dispensing** | Medicine management, stock adjustments, dispensing, expiry and low-stock queries, and related persistence entities. | Optimistic concurrency for stock changes and focused domain/integration tests. |
 | **Nursing, staff, and shifts** | Nurse management, shifts, patient assignments/transfers, vital-sign recording, department changes, and head-nurse status. | Link staff records to user identities and issue a consistent `staff_id` claim; broaden authorization and persistence tests. |
 | **Patients and clinical records** | Patient and clinical-record persistence entities, repositories, and nurse assignment support. | Patient registration/profile workflows, API endpoints, and resource-ownership rules for records and prescriptions. |
@@ -74,6 +74,7 @@ Authentication controller requests are limited to 10 requests per minute per cli
 | Method | Route | Purpose |
 | --- | --- | --- |
 | `POST` | `/api/departments/register` | Create a department. |
+| `POST` | `/api/departments` | Create a department (preferred route). |
 | `GET` | `/api/departments` | List departments. |
 | `GET` | `/api/departments/{id}` | Retrieve a department. |
 | `PUT` | `/api/departments/{id}/rename` | Rename a department. |
@@ -83,7 +84,7 @@ Authentication controller requests are limited to 10 requests per minute per cli
 
 ### Doctors — `/api/doctors`
 
-`GET /api/doctors`, `GET /api/doctors/{id}`, `POST /api/doctors/register`, `PATCH /api/doctors/{id}/relocate`, `PATCH /api/doctors/{id}/update-specialization`, `PATCH /api/doctors/{id}/transfer-department`, `POST /api/doctors/{id}/deactivate`, and `POST /api/doctors/{id}/reactivate`.
+`GET /api/doctors?includeInactive={bool}`, `GET /api/doctors/{id}`, `POST /api/doctors/register`, `PATCH /api/doctors/{id}/name`, `PATCH /api/doctors/{id}/contact`, `PATCH /api/doctors/{id}/relocate`, `PATCH /api/doctors/{id}/update-specialization`, `PATCH /api/doctors/{id}/transfer-department`, `POST /api/doctors/{id}/deactivate`, and `POST /api/doctors/{id}/reactivate`.
 
 ### Appointments — `/api/appointments`
 
@@ -160,6 +161,8 @@ The HTTP development profile serves the API at `http://localhost:5277`; Swagger 
 
 The repository includes an `InitialCreate` migration. Before applying it to an existing database, compare the target schema with the migration; it is intended to establish the schema and may conflict with tables created outside EF migrations.
 
+The appointment-slot and department-name migrations add filtered unique indexes. Resolve any existing duplicate active doctor/time slots or active department names before applying these migrations.
+
 ### Docker Compose
 
 Set `MSSQL_SA_PASSWORD` and `JWT_SIGNING_KEY` in the environment. The JWT signing key must contain at least 32 bytes. Start the API and SQL Server with:
@@ -174,8 +177,10 @@ The API listens on port `8080`; SQL Server data persists in the `sqlserver-data`
 
 - Introduced an Application transaction port implemented by Infrastructure, removing Application's direct project dependency on Infrastructure.
 - Limited transaction behavior to write commands; queries no longer open transactions. Authentication handlers use the shared boundary instead of creating nested transactions.
-- Roll back failed domain `Result` responses and dispatch domain events after a successful commit.
-- Added administrative, clinical, and care-provider role policies; added per-client-IP authentication throttling.
+- Roll back failed domain `Result` responses by default, preserve login lockout state on rejected logins, and dispatch domain events after commit.
+- Added administrative, clinical, and care-provider role policies; added per-client-IP authentication throttling and made failed-login lockout state commit even when login returns an authentication failure.
+- Validated appointment doctor, shift, patient, and conflict rules and added a filtered unique doctor/time index with a `409 Conflict` response for race collisions.
+- Added case-normalized department duplicate checks, a filtered unique-name index, consistent not-found handling, and soft-deleted record filtering.
 - Standardized API route prefixes and corrected the nurse update route.
 - Aligned the test project with .NET 8, added CI for restore/build/test and migration-model validation, and added Docker Compose support.
 - Added JSON console logging and an anonymous process health endpoint.
@@ -183,7 +188,7 @@ The API listens on port `8080`; SQL Server data persists in the `sqlserver-data`
 
 ## Tests and CI
 
-The existing xUnit suite contains 132 tests. It covers doctor lifecycle, schedules and appointments, departments, nurses and shifts, patient assignments, authentication domain rules and value objects, and persistence conversion for encrypted two-factor secrets.
+The existing xUnit suite contains 146 tests. It covers doctor lifecycle, schedules and appointments, department lifecycle and events, nurses and shifts, patient assignments, authentication domain rules and value objects, transaction behavior for login lockout persistence, and persistence conversion for encrypted two-factor secrets.
 
 The CI workflow restores, builds, runs the existing tests, and checks for pending EF model changes on pull requests and pushes to `main` or `master`. Application handler, authorization/HTTP contract, concurrency, and SQL Server integration test coverage remains incomplete.
 
@@ -199,7 +204,7 @@ The CI workflow restores, builds, runs the existing tests, and checks for pendin
 ### Workflows and concurrency
 
 - Add patient registration/profile use cases and API endpoints with medical-record and prescription permissions.
-- Integrate doctor availability with appointment creation and protect against overlap and concurrent booking.
+- Define appointment duration and overlap semantics beyond exact timestamp matches; expand concurrent-booking and SQL Server integration coverage.
 - Protect medicine stock changes from concurrent writes; expand medicine/dispensing tests.
 - Add Application handler tests and API/infrastructure integration tests using a test database.
 

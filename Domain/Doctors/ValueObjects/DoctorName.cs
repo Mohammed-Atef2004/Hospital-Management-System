@@ -18,6 +18,10 @@ public sealed record DoctorName
             throw new Exceptions.InvalidDoctorNameException();
         if (string.IsNullOrWhiteSpace(lastName))
             throw new Exceptions.InvalidDoctorNameException();
-        return new DoctorName(firstName.Trim(), lastName.Trim());
+        var normalizedFirstName = firstName.Trim();
+        var normalizedLastName = lastName.Trim();
+        if (normalizedFirstName.Length > 50 || normalizedLastName.Length > 50)
+            throw new Exceptions.InvalidDoctorNameException("Doctor names cannot exceed 50 characters.");
+        return new DoctorName(normalizedFirstName, normalizedLastName);
     }
 }

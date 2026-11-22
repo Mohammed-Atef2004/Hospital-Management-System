@@ -2,12 +2,6 @@
 using AutoMapper;
 using Domain.Repositories;
 using MediatR;
-using Microsoft.EntityFrameworkCore;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Application.Features.Doctors.Queries.GetAll
 {
@@ -22,7 +16,7 @@ namespace Application.Features.Doctors.Queries.GetAll
         }
         public async Task<List<DoctorDto>> Handle(GetAllDoctorsQuery request, CancellationToken cancellationToken)
         {
-            var doctors = await _unitOfWork.Doctor.GetAllAsync();
+            var doctors = await _unitOfWork.Doctor.GetWithDepartmentsAsync(request.IncludeInactive, cancellationToken);
             return _mapper.Map<List<DoctorDto>>(doctors);
         }
     }

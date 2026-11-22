@@ -38,6 +38,10 @@ namespace Infastructure.Presistence.Configurations
             builder.Property(a => a.IsCancelled)
                 .HasDefaultValue(false);
 
+            builder.HasIndex(a => new { a.DoctorId, a.AppointmentDate })
+                .IsUnique()
+                .HasFilter("[IsCancelled] = 0 AND [IsDeleted] = 0");
+
         }
     }
 }

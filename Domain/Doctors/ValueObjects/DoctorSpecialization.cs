@@ -10,6 +10,9 @@ public sealed record DoctorSpecialization
     {
         if (string.IsNullOrWhiteSpace(value))
             throw new Exceptions.InvalidSpecializationException();
-        return new DoctorSpecialization(value.Trim());
+        var normalized = value.Trim();
+        if (normalized.Length > 100)
+            throw new Exceptions.InvalidSpecializationException("Specialization cannot exceed 100 characters.");
+        return new DoctorSpecialization(normalized);
     }
 }

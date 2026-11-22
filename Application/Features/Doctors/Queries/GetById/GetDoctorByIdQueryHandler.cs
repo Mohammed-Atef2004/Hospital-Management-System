@@ -18,7 +18,7 @@ namespace Application.Features.Doctors.Queries.GetById
         }
         public async Task<DoctorDto> Handle(GetDoctorByIdQuery request, CancellationToken cancellationToken)
         {
-            var doctor = await _unitOfWork.Doctor.GetByIdAsync(request.Id);
+            var doctor = await _unitOfWork.Doctor.GetActiveByIdWithDepartmentAsync(request.Id, cancellationToken);
             if (doctor == null)
             {
                 throw new NotFoundException(nameof(Doctor), request.Id);

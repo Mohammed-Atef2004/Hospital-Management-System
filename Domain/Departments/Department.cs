@@ -74,9 +74,10 @@ namespace Domain.Departments
         }
         public void ChangeDescription(string newDescription)
         {
+            var previousDescription = Description;
             Description = DepartmentDescription.Create(newDescription).Value;
             UpdatedAt = DateTime.UtcNow;
-            AddDomainEvent(new DepartmentDescriptionChangedDomainEvent(Id, Description));
+            AddDomainEvent(new DepartmentDescriptionChangedDomainEvent(Id, previousDescription, Description));
         }
 
         private void AddDomainEvent(DomainEvent domainEvent) => _domainEvents.Add(domainEvent);

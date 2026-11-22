@@ -1,4 +1,4 @@
-﻿using Application.Features.Departments.DTOs;
+using Application.Features.Departments.DTOs;
 using Domain.Repositories;
 using MediatR;
 using System;
@@ -21,7 +21,7 @@ namespace Application.Features.Departments.Queries.GetAll
 
         public async Task<List<DepartmentDto>> Handle(GetAllDepartmentsQuery request, CancellationToken ct)
         {
-            var departments = await _unitOfWork.Department.GetAllAsync();
+            var departments = await _unitOfWork.Department.GetAllAsync(d => !d.IsDeleted);
 
             return departments.Select(d =>
                 new DepartmentDto(d.Id, d.Name, d.Description, d.IsActive)).ToList();

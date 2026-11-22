@@ -9,7 +9,7 @@ namespace Domain.Doctors.Exceptions
 {
     public sealed class InvalidSpecializationException : DomainException
     {
-        public InvalidSpecializationException()
-            : base("Specialization cannot be empty.") { }
+        public InvalidSpecializationException(string? message = null)
+            : base(message ?? "Specialization cannot be empty.") { }
     }
 }

@@ -8,5 +8,5 @@ using System.Threading.Tasks;
 
 namespace Application.Features.Doctors.Queries.GetAll
 {
-    public record GetAllDoctorsQuery():IRequest<List<DoctorDto>>;       
+    public record GetAllDoctorsQuery(bool IncludeInactive = false) : IRequest<List<DoctorDto>>;
 }

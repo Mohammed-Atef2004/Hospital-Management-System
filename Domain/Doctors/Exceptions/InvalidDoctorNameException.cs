@@ -1,10 +1,11 @@
 ﻿namespace Domain.Doctors.Exceptions
 {
     [Serializable]
-    public class InvalidDoctorNameException : ArgumentException
+    public class InvalidDoctorNameException : Domain.SharedKernel.DomainException
     {
        
-        public InvalidDoctorNameException() : base("First name and last name are required.")
+        public InvalidDoctorNameException(string? message = null)
+            : base(message ?? "First name and last name are required.")
         {
         }
        

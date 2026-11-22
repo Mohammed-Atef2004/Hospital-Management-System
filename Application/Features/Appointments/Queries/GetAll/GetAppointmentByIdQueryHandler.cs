@@ -2,6 +2,7 @@
 using AutoMapper;
 using Domain.Interfaces;
 using MediatR;
+using Application.Common.Exceptions;
 
 namespace Application.Features.Appointments.Queries.GetAppointmentById;
 
@@ -29,8 +30,7 @@ public class GetAppointmentByIdQueryHandler
 
         if (appointment == null)
         {
-            throw new ArgumentException(
-                "No Appointment with this Id");
+            throw new NotFoundException("Appointment", request.Id);
         }
 
         return _mapper.Map<AppointmentResponse>(appointment);

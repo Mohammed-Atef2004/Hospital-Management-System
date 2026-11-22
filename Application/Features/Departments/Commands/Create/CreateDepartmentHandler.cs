@@ -21,7 +21,7 @@ namespace Application.Features.Departments.Commands.Create
 
         public async Task<int> Handle(CreateDepartmentCommand request, CancellationToken ct)
         {
-            if (await _unitOfWork.Department.ExistsByNameAsync(request.Name))
+            if (await _unitOfWork.Department.ExistsByNameAsync(request.Name, cancellationToken: ct))
                 throw new ConflictException($"Department '{request.Name}' already exists.");
 
             var dept = Department.Register(request.Name, request.Description);

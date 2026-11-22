@@ -1,6 +1,5 @@
 ﻿
 using Application.Features.Appointments.Commands.Cancel;
-using Application.Features.Appointments.Commands;
 using Application.Features.Appointments.Commands.Create;
 using Application.Features.Appointments.Queries.GetAllAppointments;
 using Application.Features.Appointments.Queries.GetAppointmentById;
@@ -11,11 +10,6 @@ using Application.Features.Appointments.Queries.GetUpcomingAppointments;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.VisualStudio.Web.CodeGenerators.Mvc.Templates.Blazor;
-using System;
-using static System.Net.Mime.MediaTypeNames;
-using static System.Net.WebRequestMethods;
-using static System.Runtime.InteropServices.JavaScript.JSType;
 using Application.Features.Appointments.DTOs;
 using Application.Features.Appointments.Commands.UpdateDoctor;
 using Application.Features.Appointments.Commands.UpdateAppointmentDate;
@@ -138,11 +132,11 @@ public class AppointmentsController : ControllerBase
         CreateAppointmentCommand command,
         CancellationToken cancellationToken)
     {
-        await _mediator.Send(
+        var appointment = await _mediator.Send(
             command,
             cancellationToken);
 
-        return Ok();
+        return CreatedAtAction(nameof(GetById), new { id = appointment.Id }, appointment);
     }
 
     // PUT: api/Appointments/5/date
@@ -155,7 +149,7 @@ public class AppointmentsController : ControllerBase
        
 
         await _mediator.Send(
-            command,
+            command with { Id = id },
             cancellationToken);
 
         return NoContent();
@@ -171,7 +165,7 @@ public class AppointmentsController : ControllerBase
         
 
         await _mediator.Send(
-            command,
+            command with { Id = id },
             cancellationToken);
 
         return NoContent();
@@ -180,13 +174,14 @@ public class AppointmentsController : ControllerBase
     // PUT: api/Appointments/5/doctor
     [HttpPut("{id:int}/doctor")]
     public async Task<IActionResult> ChangeDoctor(
+        int id,
         UpdateDoctorCommand command,
         CancellationToken cancellationToken)
     {
        
 
         await _mediator.Send(
-            command,
+            command with { Id = id },
             cancellationToken);
 
         return NoContent();
@@ -202,7 +197,7 @@ public class AppointmentsController : ControllerBase
         
 
         await _mediator.Send(
-            command,
+            command with { Id = id },
             cancellationToken);
 
         return NoContent();

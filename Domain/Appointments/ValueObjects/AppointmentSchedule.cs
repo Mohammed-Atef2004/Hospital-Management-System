@@ -1,5 +1,7 @@
 namespace Domain.Appointments.ValueObjects;
 
+using Domain.SharedKernel;
+
 public sealed record AppointmentSchedule
 {
     public DateTime Value { get; }
@@ -8,7 +10,7 @@ public sealed record AppointmentSchedule
     public static AppointmentSchedule Create(DateTime value)
     {
         if (value <= DateTime.UtcNow)
-            throw new ArgumentException("Appointment date must be in the future.", nameof(value));
+            throw new DomainException("Appointment date must be in the future.");
         return new AppointmentSchedule(value);
     }
 }

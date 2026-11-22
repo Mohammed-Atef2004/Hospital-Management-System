@@ -1,4 +1,5 @@
-﻿using Domain.Entities;
+using Domain.Entities;
+using Domain.SharedKernel;
 
 namespace Domain.Tests.Entities;
 
@@ -58,7 +59,7 @@ public class AppointmentTests
 
         Assert.Contains(appointment.DomainEvents,
             domainEvent => domainEvent is Domain.Appointments.Events.AppointmentCancelledDomainEvent);
-        Assert.Throws<InvalidOperationException>(() => appointment.ChangeAppointmentDate(FutureDate.AddDays(1)));
+        Assert.Throws<DomainException>(() => appointment.ChangeAppointmentDate(FutureDate.AddDays(1)));
     }
 
     [Theory]
@@ -68,7 +69,7 @@ public class AppointmentTests
     [InlineData(1, -1)]
     public void Create_WithInvalidForeignKeys_ShouldThrowArgumentOutOfRangeException(int patientId, int doctorId)
     {
-        Assert.Throws<ArgumentOutOfRangeException>(() => Appointment.Create(
+        Assert.Throws<DomainException>(() => Appointment.Create(
             FutureDate, "Regular medical check-up", patientId, doctorId));
     }
 
@@ -79,7 +80,7 @@ public class AppointmentTests
         var pastDate = DateTime.UtcNow.AddMinutes(-1);
 
         // Act & Assert
-        Assert.Throws<ArgumentException>(() =>
+        Assert.Throws<DomainException>(() =>
             Appointment.Create(
                 pastDate,
                 "Regular medical check-up",
@@ -95,7 +96,7 @@ public class AppointmentTests
         string description)
     {
         // Act & Assert
-        Assert.Throws<ArgumentException>(() =>
+        Assert.Throws<DomainException>(() =>
             Appointment.Create(
                 FutureDate,
                 description,
@@ -129,7 +130,7 @@ public class AppointmentTests
         appointment.Cancel();
 
         // Act & Assert
-        Assert.Throws<InvalidOperationException>(
+        Assert.Throws<DomainException>(
             () => appointment.Cancel());
     }
 
@@ -163,7 +164,7 @@ public class AppointmentTests
         var appointment = CreateValidAppointment();
 
         // Act & Assert
-        Assert.Throws<ArgumentException>(
+        Assert.Throws<DomainException>(
             () => appointment.ChangeDescription(description));
     }
 
@@ -176,7 +177,7 @@ public class AppointmentTests
         appointment.Cancel();
 
         // Act & Assert
-        Assert.Throws<InvalidOperationException>(
+        Assert.Throws<DomainException>(
             () => appointment.ChangeDescription("New description"));
     }
 
@@ -207,7 +208,7 @@ public class AppointmentTests
         var appointment = CreateValidAppointment();
 
         // Act & Assert
-        Assert.Throws<ArgumentOutOfRangeException>(
+        Assert.Throws<DomainException>(
             () => appointment.ChangeDoctor(doctorId));
     }
 
@@ -220,7 +221,7 @@ public class AppointmentTests
         appointment.Cancel();
 
         // Act & Assert
-        Assert.Throws<InvalidOperationException>(
+        Assert.Throws<DomainException>(
             () => appointment.ChangeDoctor(2));
     }
 
@@ -251,7 +252,7 @@ public class AppointmentTests
         var appointment = CreateValidAppointment();
 
         // Act & Assert
-        Assert.Throws<ArgumentOutOfRangeException>(
+        Assert.Throws<DomainException>(
             () => appointment.ChangePatient(patientId));
     }
 
@@ -264,7 +265,7 @@ public class AppointmentTests
         appointment.Cancel();
 
         // Act & Assert
-        Assert.Throws<InvalidOperationException>(
+        Assert.Throws<DomainException>(
             () => appointment.ChangePatient(2));
     }
 
@@ -294,7 +295,7 @@ public class AppointmentTests
         var pastDate = DateTime.UtcNow.AddMinutes(-1);
 
         // Act & Assert
-        Assert.Throws<ArgumentException>(
+        Assert.Throws<DomainException>(
             () => appointment.ChangeAppointmentDate(pastDate));
     }
 
@@ -307,7 +308,7 @@ public class AppointmentTests
         appointment.Cancel();
 
         // Act & Assert
-        Assert.Throws<InvalidOperationException>(
+        Assert.Throws<DomainException>(
             () => appointment.ChangeAppointmentDate(
                 DateTime.UtcNow.AddDays(2)));
     }

@@ -9,7 +9,7 @@ namespace Domain.Departments
 {
     public interface IDepartmentRepository : IGenericRepository<Department>
     {
-        Task<bool> ExistsByNameAsync(string name);
+        Task<bool> ExistsByNameAsync(string name, int? excludingDepartmentId = null, CancellationToken cancellationToken = default);
     }
 
 }

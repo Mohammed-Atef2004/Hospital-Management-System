@@ -1,17 +1,11 @@
-﻿using Domain.Repositories;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using Domain.Repositories;
 
-namespace Domain.Doctors
+namespace Domain.Doctors;
+
+public interface IDoctorRepository : IGenericRepository<Doctor>
 {
-    public interface IDoctorRepository : IGenericRepository<Doctor>
-    {
-        public interface IDoctorRepository : IGenericRepository<Doctor>
-        {
-            Task<Doctor?> GetDoctorWithSchedulesAndAppointmentsAsync(int id);
-        }
-    }
+    Task<Doctor?> GetActiveByIdWithDepartmentAsync(int id, CancellationToken cancellationToken = default);
+    Task<IReadOnlyList<Doctor>> GetWithDepartmentsAsync(bool includeInactive, CancellationToken cancellationToken = default);
+    Task<Doctor?> GetDoctorWithSchedulesAndAppointmentsAsync(int id, CancellationToken cancellationToken = default);
+    Task<Doctor?> GetBookingAvailabilityAsync(int id, CancellationToken cancellationToken = default);
 }

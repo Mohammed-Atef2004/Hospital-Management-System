@@ -1,4 +1,5 @@
-﻿using Domain.Repositories;
+using Application.Common.Exceptions;
+using Domain.Repositories;
 using MediatR;
 using System;
 using System.Collections.Generic;
@@ -19,8 +20,8 @@ namespace Application.Features.Departments.Commands.Activate
 
         public async Task<Unit> Handle(ActivateDepartmentCommand request, CancellationToken ct)
         {
-            var dept = await _unitOfWork.Department.GetByIdAsync(request.Id);
-            if (dept == null) throw new Exception("Department not found");
+            var dept = await _unitOfWork.Department.GetFirstOrDefaultAsync(d => d.Id == request.Id && !d.IsDeleted)
+                ?? throw new NotFoundException("Department", request.Id);
 
             dept.Activate();
             await _unitOfWork.CompleteAsync();
