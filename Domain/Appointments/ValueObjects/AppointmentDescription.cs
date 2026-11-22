@@ -1,5 +1,7 @@
 namespace Domain.Appointments.ValueObjects;
 
+using Domain.SharedKernel;
+
 public sealed record AppointmentDescription
 {
     public string Value { get; }
@@ -8,7 +10,7 @@ public sealed record AppointmentDescription
     public static AppointmentDescription Create(string value)
     {
         if (string.IsNullOrWhiteSpace(value) || value.Trim().Length > 500)
-            throw new ArgumentException("Appointment description must contain 1 to 500 characters.", nameof(value));
+            throw new DomainException("Appointment description must contain 1 to 500 characters.");
         return new AppointmentDescription(value.Trim());
     }
 }

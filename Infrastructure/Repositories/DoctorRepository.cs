@@ -23,6 +23,13 @@ namespace Infastructure.Repositories
                 .FirstOrDefaultAsync(d => d.Id == id, cancellationToken);
         }
 
+        public async Task<Doctor?> GetBookingAvailabilityAsync(int id, CancellationToken cancellationToken = default)
+            => await _context.Doctors
+                .AsNoTracking()
+                .Include(doctor => doctor.Shifts)
+                .Include(doctor => doctor.Appointments.Where(appointment => !appointment.IsDeleted && !appointment.IsCancelled))
+                .SingleOrDefaultAsync(doctor => doctor.Id == id && !doctor.IsDeleted, cancellationToken);
+
         public Task<Doctor?> GetActiveByIdWithDepartmentAsync(int id, CancellationToken cancellationToken = default)
             => _context.Doctors
                 .AsNoTracking()

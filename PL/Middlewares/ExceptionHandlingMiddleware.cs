@@ -1,5 +1,7 @@
 ﻿using Application.Common.Exceptions;
 using Domain.SharedKernel;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Data.SqlClient;
 
 namespace API.Middlewares
 {
@@ -35,8 +37,14 @@ namespace API.Middlewares
         {
             _logger.LogError(exception, "Unhandled exception occurred.");
 
+            var isAppointmentSlotConflict = exception is DbUpdateException updateException &&
+                updateException.GetBaseException() is SqlException sqlException &&
+                (sqlException.Number is 2601 or 2627) &&
+                sqlException.Message.Contains("IX_Appointments_DoctorId_AppointmentDate", StringComparison.OrdinalIgnoreCase);
+
             var (statusCode, message) = exception switch
             {
+                _ when isAppointmentSlotConflict => (StatusCodes.Status409Conflict, "The doctor already has an appointment at that time."),
                 NotFoundException => (StatusCodes.Status404NotFound, exception.Message),
                 ForbiddenAccessException => (StatusCodes.Status403Forbidden, exception.Message),
                 UnauthorizedAccessException => (StatusCodes.Status401Unauthorized, "Unauthorized."),

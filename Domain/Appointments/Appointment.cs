@@ -110,8 +110,7 @@ public class Appointment : CommonData, IAggregateRoot
     {
         if (IsCancelled)
         {
-            throw new InvalidOperationException(
-                "A cancelled appointment cannot be modified.");
+            throw new DomainException("A cancelled appointment cannot be modified.");
         }
     }
 

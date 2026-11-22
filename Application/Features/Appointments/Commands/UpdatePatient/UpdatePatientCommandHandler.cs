@@ -22,12 +22,13 @@ namespace Application.Features.Appointments.Commands.UpdatePatient
 
         public async Task<Unit> Handle(UpdatePatientCommand request, CancellationToken cancellationToken)
         {
-            var appointment = _appointmentsRepository.GetFirstOrDefaultAsync(x => x.Id == request.Id).Result;
+            var appointment = await _appointmentsRepository.GetFirstOrDefaultAsync(x => x.Id == request.Id);
             if (appointment == null)
-            {
-                throw new ArgumentException("No Appointment with this Id");
-            }
+                throw new Application.Common.Exceptions.NotFoundException("Appointment", request.Id);
+            if (!await _unitOfWork.Patient.ExistsAsync(patient => patient.Id == request.PatientId, cancellationToken))
+                throw new Application.Common.Exceptions.NotFoundException("Patient", request.PatientId);
             appointment.ChangePatient(request.PatientId);
+            await _unitOfWork.CompleteAsync();
             return Unit.Value;
         }
     }

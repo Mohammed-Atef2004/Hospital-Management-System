@@ -226,7 +226,7 @@ namespace Domain.Doctors
         // --- Helpers ---
         public string FullName => $"{FirstName} {LastName}";
 
-        public bool IsAvailableForAppointment(DateTime dateTime)
+        public bool IsAvailableForAppointment(DateTime dateTime, int? excludingAppointmentId = null)
         {
             if (IsDeleted) return false;
             var isWithinWorkingHours = Shifts.Any(s => !s.IsDeleted &&
@@ -237,7 +237,7 @@ namespace Domain.Doctors
 
 
             var hasConflict = Appointments.Any(a =>
-                a.AppointmentDate == dateTime && !a.IsDeleted && !a.IsCancelled);
+                a.Id != excludingAppointmentId && a.AppointmentDate == dateTime && !a.IsDeleted && !a.IsCancelled);
 
             return !hasConflict;
         }

@@ -1,5 +1,6 @@
 ﻿using Domain.Interfaces;
 using Domain.Repositories;
+using Domain.SharedKernel;
 using MediatR;
 using System;
 using System.Collections.Generic;
@@ -22,12 +23,14 @@ namespace Application.Features.Appointments.Commands.UpdateAppointmentDate
 
         public async Task<Unit> Handle(UpdateAppointmentDateCommand request, CancellationToken cancellationToken)
         {
-            var appointment = _appointmentsRepository.GetFirstOrDefaultAsync(x => x.Id == request.Id).Result;
+            var appointment = await _appointmentsRepository.GetFirstOrDefaultAsync(x => x.Id == request.Id);
             if (appointment == null)
-            {
-                throw new ArgumentException("No Appointment with this Id");
-            }
+                throw new Application.Common.Exceptions.NotFoundException("Appointment", request.Id);
+            var doctor = await _unitOfWork.Doctor.GetBookingAvailabilityAsync(appointment.DoctorId, cancellationToken);
+            if (doctor is null || !doctor.IsAvailableForAppointment(request.AppointmentDate, appointment.Id))
+                throw new DomainException("The doctor is not available at the requested appointment time.");
             appointment.ChangeAppointmentDate(request.AppointmentDate);
+            await _unitOfWork.CompleteAsync();
             return Unit.Value;
         }
     }

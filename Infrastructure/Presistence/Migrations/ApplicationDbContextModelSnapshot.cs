@@ -119,9 +119,11 @@ namespace Infrastructure.Presistence.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("DoctorId");
-
                     b.HasIndex("PatientId");
+
+                    b.HasIndex("DoctorId", "AppointmentDate")
+                        .IsUnique()
+                        .HasFilter("[IsCancelled] = 0 AND [IsDeleted] = 0");
 
                     b.ToTable("Appointments", (string)null);
                 });

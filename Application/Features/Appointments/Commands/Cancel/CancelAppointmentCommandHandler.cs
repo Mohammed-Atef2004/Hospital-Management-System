@@ -26,8 +26,7 @@ public class CancelAppointmentCommandHandler
                 x => x.Id == request.Id);
 
         if (appointment is null)
-            throw new ArgumentException(
-                $"Appointment with Id {request.Id} was not found.");
+            throw new Application.Common.Exceptions.NotFoundException("Appointment", request.Id);
 
         appointment.Cancel();
 

@@ -22,12 +22,11 @@ namespace Application.Features.Appointments.Commands.UpdateDescription
 
         public async Task<Unit> Handle(UpdateDesciptionCommand request, CancellationToken cancellationToken)
         {
-            var appointment=_appointmentsRepository.GetFirstOrDefaultAsync(x=>x.Id==request.Id).Result;
+            var appointment = await _appointmentsRepository.GetFirstOrDefaultAsync(x => x.Id == request.Id);
             if (appointment == null)
-            {
-                throw new ArgumentException("No Appointment with this Id");
-            }
+                throw new Application.Common.Exceptions.NotFoundException("Appointment", request.Id);
             appointment.ChangeDescription(request.Description);
+            await _unitOfWork.CompleteAsync();
             return Unit.Value;
         }
     }
