@@ -1,33 +1,23 @@
-﻿using Domain.Repositories;
+using Application.Common.Exceptions;
+using Domain.Repositories;
 using MediatR;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
-namespace Application.Features.Departments.Commands.Change_Discription
+namespace Application.Features.Departments.Commands.Change_Discription;
+
+public class ChangeDepartmentDescriptionHandler : IRequestHandler<ChangeDepartmentDescriptionCommand>
 {
-    public class ChangeDepartmentDescriptionHandler
-    : IRequestHandler<ChangeDepartmentDescriptionCommand>
+    private readonly IUnitOfWork _unitOfWork;
+
+    public ChangeDepartmentDescriptionHandler(IUnitOfWork unitOfWork) => _unitOfWork = unitOfWork;
+
+    public async Task<Unit> Handle(ChangeDepartmentDescriptionCommand request, CancellationToken cancellationToken)
     {
-        private readonly IUnitOfWork _unitOfWork;
+        var department = await _unitOfWork.Department.GetFirstOrDefaultAsync(
+            item => item.Id == request.Id && !item.IsDeleted)
+            ?? throw new NotFoundException("Department", request.Id);
 
-        public ChangeDepartmentDescriptionHandler(IUnitOfWork unitOfWork)
-        {
-            _unitOfWork = unitOfWork;
-        }
-
-        public async Task<Unit> Handle(ChangeDepartmentDescriptionCommand request, CancellationToken ct)
-        {
-            var dept = await _unitOfWork.Department.GetByIdAsync(request.Id);
-            if (dept == null) throw new Exception("Department not found");
-
-            dept.ChangeDescription(request.Description);
-
-            await _unitOfWork.CompleteAsync();
-            return Unit.Value;
-        }
+        department.ChangeDescription(request.Description);
+        await _unitOfWork.CompleteAsync();
+        return Unit.Value;
     }
-
 }

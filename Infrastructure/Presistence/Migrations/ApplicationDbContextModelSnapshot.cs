@@ -66,6 +66,10 @@ namespace Infrastructure.Presistence.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("Name")
+                        .IsUnique()
+                        .HasFilter("[IsDeleted] = 0");
+
                     b.ToTable("Departments", (string)null);
                 });
 

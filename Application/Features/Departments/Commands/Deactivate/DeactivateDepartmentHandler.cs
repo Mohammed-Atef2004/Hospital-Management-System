@@ -1,4 +1,4 @@
-﻿using Application.Common.Exceptions;
+using Application.Common.Exceptions;
 using Domain.Repositories;
 using MediatR;
 using System;
@@ -20,8 +20,8 @@ namespace Application.Features.Departments.Commands.Deactivate
 
         public async Task <Unit>Handle(DeactivateDepartmentCommand request, CancellationToken ct)
         {
-            var dept = await _unitOfWork.Department.GetByIdAsync(request.Id)
-                ?? throw new NotFoundException($"Department with {request.Id} is not found");
+            var dept = await _unitOfWork.Department.GetFirstOrDefaultAsync(d => d.Id == request.Id && !d.IsDeleted)
+                ?? throw new NotFoundException("Department", request.Id);
 
             dept.Deactivate(); 
 

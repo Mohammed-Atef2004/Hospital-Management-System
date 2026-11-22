@@ -16,8 +16,12 @@ namespace Infastructure.Repositories
     {
         public DepartmentRepository(ApplicationDbContext context) : base(context) { }
 
-        public Task<bool> ExistsByNameAsync(string name)
-            => _dbSet.AnyAsync(d => d.Name == name && !d.IsDeleted);
+        public Task<bool> ExistsByNameAsync(string name, int? excludingDepartmentId = null, CancellationToken cancellationToken = default)
+        {
+            var normalizedName = name.Trim().ToUpper();
+            return _dbSet.AnyAsync(d => d.Name.ToUpper() == normalizedName && !d.IsDeleted &&
+                (!excludingDepartmentId.HasValue || d.Id != excludingDepartmentId.Value), cancellationToken);
+        }
     }
 
 }

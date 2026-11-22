@@ -20,8 +20,10 @@ namespace Application.Features.Departments.Commands.RenameDepartment
 
         public async Task<Unit> Handle(RenameDepartmentCommand request, CancellationToken ct)
         {
-            var dept = await _unitOfWork.Department.GetByIdAsync(request.Id);
-            if (dept == null) throw new NotFoundException("Department not found");
+            var dept = await _unitOfWork.Department.GetFirstOrDefaultAsync(d => d.Id == request.Id && !d.IsDeleted)
+                ?? throw new NotFoundException("Department", request.Id);
+            if (await _unitOfWork.Department.ExistsByNameAsync(request.Name, request.Id, ct))
+                throw new ConflictException($"Department '{request.Name}' already exists.");
 
             dept.Rename(request.Name);
 

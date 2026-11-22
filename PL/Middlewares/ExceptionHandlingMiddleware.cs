@@ -41,10 +41,15 @@ namespace API.Middlewares
                 updateException.GetBaseException() is SqlException sqlException &&
                 (sqlException.Number is 2601 or 2627) &&
                 sqlException.Message.Contains("IX_Appointments_DoctorId_AppointmentDate", StringComparison.OrdinalIgnoreCase);
+            var isDepartmentNameConflict = exception is DbUpdateException departmentUpdateException &&
+                departmentUpdateException.GetBaseException() is SqlException departmentSqlException &&
+                (departmentSqlException.Number is 2601 or 2627) &&
+                departmentSqlException.Message.Contains("IX_Departments_Name", StringComparison.OrdinalIgnoreCase);
 
             var (statusCode, message) = exception switch
             {
                 _ when isAppointmentSlotConflict => (StatusCodes.Status409Conflict, "The doctor already has an appointment at that time."),
+                _ when isDepartmentNameConflict => (StatusCodes.Status409Conflict, "A department with that name already exists."),
                 NotFoundException => (StatusCodes.Status404NotFound, exception.Message),
                 ForbiddenAccessException => (StatusCodes.Status403Forbidden, exception.Message),
                 UnauthorizedAccessException => (StatusCodes.Status401Unauthorized, "Unauthorized."),

@@ -21,6 +21,10 @@ namespace Infastructure.Presistence.Configurations
                 .IsRequired()
                 .HasMaxLength(100);
 
+            builder.HasIndex(d => d.Name)
+                .IsUnique()
+                .HasFilter("[IsDeleted] = 0");
+
             builder.Property(d => d.Description)
                 .HasMaxLength(500);
 

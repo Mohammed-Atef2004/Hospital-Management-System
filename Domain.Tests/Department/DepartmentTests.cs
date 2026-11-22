@@ -129,5 +129,20 @@ namespace Domain.Tests.Departments
                 .Which.Should().BeOfType<Domain.Departments.Events.DepartmentInformationUpdatedDomainEvent>();
         }
 
+        [Fact]
+        public void ChangeDescription_ShouldRaiseEventWithPreviousAndNewValues()
+        {
+            var department = Department.Register("ICU", "Old description");
+            department.ClearDomainEvents();
+
+            department.ChangeDescription(" New description ");
+
+            var domainEvent = department.DomainEvents
+                .OfType<Domain.Departments.Events.DepartmentDescriptionChangedDomainEvent>()
+                .Single();
+            domainEvent.PreviousDescription.Should().Be("Old description");
+            domainEvent.NewDescription.Should().Be("New description");
+        }
+
     }
 }
