@@ -53,6 +53,7 @@ namespace API.Middlewares
                 NotFoundException => (StatusCodes.Status404NotFound, exception.Message),
                 ForbiddenAccessException => (StatusCodes.Status403Forbidden, exception.Message),
                 UnauthorizedAccessException => (StatusCodes.Status401Unauthorized, "Unauthorized."),
+                ConflictException => (StatusCodes.Status409Conflict, exception.Message),
                 BadRequestException => (StatusCodes.Status400BadRequest, exception.Message),
                 FluentValidation.ValidationException validationException =>
                     (StatusCodes.Status400BadRequest, string.Join(" ", validationException.Errors.Select(error => error.ErrorMessage))),
